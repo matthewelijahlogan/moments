@@ -1,0 +1,71 @@
+.analyze-container {
+    padding: 1rem;
+    max-width: 90vw;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .analyze-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .analyze-image {
+    width: 100%;
+    max-width: 500px;
+    border: 8px solid #ffcc00;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
+    margin-bottom: 1rem;
+  }
+  
+  .results-box {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 10px;
+    border: 3px solid #444;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+  }
+  
+  #lifeScore {
+    font-size: 1.5rem;
+    color: #ffcc00;
+  }
+  
+  #predictionsList {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+  }
+  
+  #predictionsList li {
+    margin: 0.3rem 0;
+    font-size: 1rem;
+    color: white;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .action-buttons button {
+    background: #ffcc00;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: 'Sarina', cursive, sans-serif;
+    transition: transform 0.2s ease;
+  }
+  
+  .action-buttons button:hover {
+    transform: scale(1.05);
+  }
+  

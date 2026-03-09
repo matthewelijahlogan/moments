@@ -1,0 +1,36 @@
+<!-- analyze.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyze Moment</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/analyze.css">
+</head>
+<body class="page-screen">
+  <div class="banner-logo">
+    <img src="../img/MomentsLogoBanner.png" alt="Moments Banner" class="banner-img">
+  </div>
+
+  <div class="analyze-container">
+    <h1 class="analyze-title">Analyzing Your Moment...</h1>
+
+    <video id="analyzerVideo" controls width="100%"></video>
+
+    <div class="results-box">
+      <h2 id="lifeScore">Score: ...</h2>
+      <ul id="predictionsList"></ul>
+    </div>
+
+    <div class="action-buttons">
+      <button type="button" onclick="location.href='gallery.html'">Back to Gallery</button>
+    </div>
+  </div>
+
+  <!-- Cordova API -->
+  <script src="../cordova.js"></script>
+  <!-- Analysis logic -->
+  <script src="../js/analyze.js"></script>
+</body>
+</html>

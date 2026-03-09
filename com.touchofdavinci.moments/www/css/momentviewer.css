@@ -1,0 +1,64 @@
+/* css/momentviewer.css */
+.momentviewer-screen {
+    background: #121212;
+    color: white;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    box-sizing: border-box;
+  }
+  
+  .banner-logo {
+    margin-top: 1rem;
+  }
+  
+  .banner-img {
+    height: 20vh;
+    max-width: 90vw;
+  }
+  
+  .viewer-container {
+    margin: 2rem auto;
+    width: 90vw;
+    max-width: 800px;
+    border: 8px solid #ffcc00;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(255,204,0,0.4);
+    overflow: hidden;
+    background: black;
+  }
+  
+  .viewer-container video {
+    width: 100%;
+    height: auto;
+  }
+  
+  .score-display {
+    margin: 1rem 0;
+    font-size: 1.5rem;
+    color: #ffcc00;
+  }
+  
+  .viewer-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .viewer-actions button {
+    padding: 0.75rem 1.5rem;
+    background: #ffcc00;
+    border: none;
+    border-radius: 0.5rem;
+    color: #121212;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .viewer-actions button:hover {
+    transform: scale(1.05);
+  }
+  

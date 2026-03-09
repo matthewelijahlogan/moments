@@ -1,0 +1,11 @@
+{
+  "name": "moments-platform",
+  "private": true,
+  "scripts": {
+    "mobile:install": "cd mobile && npm install",
+    "mobile:android": "cd mobile && npm run android",
+    "mobile:start": "cd mobile && npm start",
+    "backend:install": "cd backend && npm install",
+    "backend:start": "cd backend && npm start"
+  }
+}

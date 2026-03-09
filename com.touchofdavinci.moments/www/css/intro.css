@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarina&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Sarina', cursive, sans-serif;
+  background: #121212;
+  color: white;
+}
+
+.intro-screen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Wrapper for tape and letters */
+.tape-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90vw;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Tape image */
+.tape-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+  z-index: 1;
+}
+
+/* Letters animated over tape */
+.tape-overlay {
+  position: absolute;
+  width: 80vw;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.tape-overlay .letter {
+  width: 80vw;
+  font-size: 3rem;
+  font-family: 'Sarina', cursive, sans-serif;
+  color: #000000;
+  margin: 0 0.3rem;
+  opacity: 0;
+  animation: fadeInLetters 1s ease forwards;
+}
+
+.tape-overlay .letter:nth-child(1) { animation-delay: 0.2s; }
+.tape-overlay .letter:nth-child(2) { animation-delay: 0.4s; }
+.tape-overlay .letter:nth-child(3) { animation-delay: 0.6s; }
+.tape-overlay .letter:nth-child(4) { animation-delay: 0.8s; }
+.tape-overlay .letter:nth-child(5) { animation-delay: 1s; }
+.tape-overlay .letter:nth-child(6) { animation-delay: 1.2s; }
+.tape-overlay .letter:nth-child(7) { animation-delay: 1.4s; }
+
+@keyframes fadeInLetters {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Subheading and button styles */
+.subtitle {
+  font-family: 'Slackey', cursive, sans-serif;
+  margin-top: 0rem;
+  font-size: 3rem;
+  opacity: 0.85;
+}
+
+.menu-buttons button {
+  font-family: 'Slackey', cursive, sans-serif;
+  margin-top: 1.5rem;
+  font-size: 1.25rem;
+  padding: 0.6rem 2rem;
+  background: #ffcc00;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}

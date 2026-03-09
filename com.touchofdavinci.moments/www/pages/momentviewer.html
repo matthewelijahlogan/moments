@@ -1,0 +1,29 @@
+<!-- pages/momentviewer.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Moment - Moments</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/momentviewer.css">
+</head>
+<body class="momentviewer-screen">
+
+  <div class="banner-logo">
+    <img src="../img/MomentsLogoBanner.png" alt="Moments Banner" class="banner-img" />
+  </div>
+
+  <div class="viewer-container">
+    <video id="viewer" controls autoplay muted></video>
+    <div id="viewerScore" class="score-display">Score: -</div>
+  </div>
+
+  <div class="viewer-actions">
+    <button type="button" onclick="window.history.back()">Back</button>
+    <button type="button" onclick="shareMoment()">Share</button>
+  </div>
+
+  <script type="module" src="../js/momentviewer.js"></script>
+</body>
+</html>

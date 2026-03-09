@@ -1,0 +1,83 @@
+/* Main Menu Screen */
+body {
+
+  overflow: hidden;
+
+}
+
+.page-screen {
+  margin: 0;
+  padding: 0;
+  font-family: 'Sarina', cursive, sans-serif;
+  background: #121212;
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.banner-logo {
+  margin-bottom: 2rem;
+}
+
+.banner-img {
+  height: 20vh;
+  max-height: 120px;
+}
+
+/* Button styles */
+button {
+  font-size: 3rem;
+  background: #ffcc00;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem 2rem;
+  margin: .3rem auto;
+  color: #121212;
+  font-family: 'Slackey', 'Sarina', cursive, sans-serif;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Main container for menu buttons */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  width: 90vw;
+  max-width: 400px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: .5rem;
+  border: 5px solid #ffcc00;
+  border-radius: 20px;
+  box-shadow: 0 0 25px rgba(255, 204, 0, 0.3);
+}
+
+.main-container button {
+  font-size: 1rem;
+  padding: 1rem;
+  background: #ffcc00;
+  border: none;
+  border-radius: 12px;
+  color: #121212;
+  font-family: 'Sarina', cursive, sans-serif;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.main-container button:hover {
+  background-color: #f1b500;
+  transform: scale(1.05);
+}
+
+/* Mobile tweaks */
+@media (max-width: 768px) {
+  .main-container button {
+    font-size: 1.1rem;
+    padding: 0.8rem;
+  }
+}

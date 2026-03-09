@@ -1,0 +1,68 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Slackey', cursive, sans-serif;
+  background: #121212;
+  color: white;
+  text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+button {
+  cursor: pointer;
+}
+
+@font-face {
+  font-family: 'Sarina';
+  src: url('../fonts/Sarina-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Slackey';
+  src: url('../fonts/Slackey-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.banner-logo {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.banner-img {
+  height: 20vh;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.main-container {
+  width: 90vw;
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+button {
+  font-size: 1.2rem;
+  background: #ffcc00;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem 2rem;
+  margin: 1rem auto;
+  color: #121212;
+  font-family: 'Slackey', 'Sarina', cursive, sans-serif;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background-color: #f1b500;
+  transform: scale(1.05);
+}

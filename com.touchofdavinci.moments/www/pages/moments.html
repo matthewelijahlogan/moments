@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capture a Moment</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/moments.css">
+</head>
+<body class="moments-screen">
+  <div class="banner-logo">
+    <img src="../img/MomentsLogoBanner.png" alt="Moments Banner" class="banner-img">
+  </div>
+
+  <div class="video-container">
+    <video id="momentPreview" autoplay muted playsinline></video>
+  </div>
+
+  <div class="controls">
+    <button type="button" id="recordBtn">
+      <img src="../img/vcr_record.png" alt="Record">
+    </button>
+    <button type="button" id="playBtn">
+      <img src="../img/vcr_play.png" alt="Play">
+    </button>
+  </div>
+
+  <div id="score" class="score-display"></div>
+
+  <!-- Save/Discard Prompt -->
+  <div id="savePrompt" style="display: none;">
+    <p>Do you want to save this moment?</p>
+    <button type="button" id="saveBtn">Save</button>
+    <button type="button" id="discardBtn">Discard</button>
+  </div>
+
+  <script src="../cordova.js"></script>
+  <script src="../js/moments.js"></script>
+</body>
+</html>
