@@ -5,7 +5,7 @@ const SETTINGS_KEY = 'moments.settings.v1';
 
 export const defaultSettings = {
   username: 'ArchiveKeeper',
-  apiBaseUrl: 'http://10.0.2.2:3000',
+  apiBaseUrl: 'http://127.0.0.1:3000',
 };
 
 export async function loadMoments() {

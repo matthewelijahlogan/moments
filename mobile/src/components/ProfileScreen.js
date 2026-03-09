@@ -71,8 +71,9 @@ export function ProfileScreen({
         />
 
         <Text style={styles.settingsHint}>
-          During Android emulator development, use `http://10.0.2.2:3000`
-          instead of `localhost`.
+          For your USB-connected Android phone, run `adb reverse tcp:3000 tcp:3000`
+          and keep `http://127.0.0.1:3000`. For the Android emulator, use
+          `http://10.0.2.2:3000`.
         </Text>
 
         <PrimaryButton
