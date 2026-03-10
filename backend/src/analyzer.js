@@ -1,4 +1,10 @@
+const {spawn} = require('child_process');
+const fs = require('fs/promises');
+const os = require('os');
+const path = require('path');
 const Jimp = require('jimp');
+const ffmpegPath = require('ffmpeg-static');
+const ffprobePath = require('ffprobe-static').path;
 
 const featuredLeaderboard = [
   {
@@ -32,6 +38,10 @@ const featuredLeaderboard = [
 
 function clamp(value, min = 0, max = 1) {
   return Math.min(max, Math.max(min, value));
+}
+
+function clampScore(value) {
+  return round(clamp(value, 15, 98));
 }
 
 function round(value) {
@@ -111,7 +121,8 @@ function summarizePixels(pixels) {
           nextRightR * 0.2126 + nextRightG * 0.7152 + nextRightB * 0.0722;
         const downLum =
           nextDownR * 0.2126 + nextDownG * 0.7152 + nextDownB * 0.0722;
-        const edge = Math.abs(luminance - rightLum) + Math.abs(luminance - downLum);
+        const edge =
+          Math.abs(luminance - rightLum) + Math.abs(luminance - downLum);
 
         totalEdge += edge;
         edgeCount += 1;
@@ -135,7 +146,9 @@ function summarizePixels(pixels) {
         const mirrorX = width - x - 1;
         const [mirrorR, mirrorG, mirrorB] = pixels[y][mirrorX];
         const difference =
-          (Math.abs(r - mirrorR) + Math.abs(g - mirrorG) + Math.abs(b - mirrorB)) /
+          (Math.abs(r - mirrorR) +
+            Math.abs(g - mirrorG) +
+            Math.abs(b - mirrorB)) /
           3;
         symmetrySum += 1 - difference;
         symmetryCount += 1;
@@ -154,7 +167,9 @@ function summarizePixels(pixels) {
   const edgeDensity = edgeCount ? totalEdge / edgeCount : 0;
   const centerEdgeDensity = centerCount ? centerEdge / centerCount : 0;
   const outerEdgeDensity = outerCount ? outerEdge / outerCount : 0;
-  const centerFocus = clamp((centerEdgeDensity + 0.025) / (outerEdgeDensity + 0.025) / 1.9);
+  const centerFocus = clamp(
+    (centerEdgeDensity + 0.025) / (outerEdgeDensity + 0.025) / 1.9,
+  );
   const entropy = computeEntropy(histogram, pixelCount);
 
   return {
@@ -252,7 +267,9 @@ function pickTier(score) {
 }
 
 function pickTitle(dimensions, signals) {
-  const entries = Object.entries(dimensions).sort((left, right) => right[1] - left[1]);
+  const entries = Object.entries(dimensions).sort(
+    (left, right) => right[1] - left[1],
+  );
   const topDimension = entries[0][0];
 
   if (topDimension === 'connection' && signals.warmth >= 62) {
@@ -318,7 +335,7 @@ function buildExplanation(dimensions, signals) {
   ];
 }
 
-async function analyzeImage(buffer) {
+async function imageBufferToPixels(buffer) {
   const image = await Jimp.read(buffer);
   image.cover(96, 96);
 
@@ -332,6 +349,10 @@ async function analyzeImage(buffer) {
     pixels.push(row);
   }
 
+  return pixels;
+}
+
+function analyzePixels(pixels) {
   const summary = summarizePixels(pixels);
   const signals = buildSignals(summary);
   const dimensions = buildDimensions(summary);
@@ -348,7 +369,301 @@ async function analyzeImage(buffer) {
   };
 }
 
+function averageMetricObjects(objects) {
+  if (!objects.length) {
+    return {};
+  }
+
+  const totals = {};
+  objects.forEach(object => {
+    Object.entries(object).forEach(([key, value]) => {
+      totals[key] = (totals[key] || 0) + Number(value || 0);
+    });
+  });
+
+  return Object.fromEntries(
+    Object.entries(totals).map(([key, value]) => [key, round(value / objects.length)]),
+  );
+}
+
+function computeFrameMotion(frames) {
+  if (frames.length < 2) {
+    return 0;
+  }
+
+  let totalDifference = 0;
+  let totalSamples = 0;
+
+  for (let index = 1; index < frames.length; index += 1) {
+    const previous = frames[index - 1];
+    const current = frames[index];
+
+    for (let y = 0; y < current.length; y += 1) {
+      for (let x = 0; x < current[y].length; x += 1) {
+        totalDifference +=
+          Math.abs(current[y][x][0] - previous[y][x][0]) +
+          Math.abs(current[y][x][1] - previous[y][x][1]) +
+          Math.abs(current[y][x][2] - previous[y][x][2]);
+        totalSamples += 3;
+      }
+    }
+  }
+
+  const normalizedDifference = totalSamples ? totalDifference / totalSamples : 0;
+  return clamp(normalizedDifference / 0.32);
+}
+
+function buildFrameTimestamps(durationSeconds) {
+  const effectiveDuration = clamp(durationSeconds, 0.8, 5);
+  const fractions = [0.14, 0.34, 0.56, 0.78, 0.92];
+
+  return [...new Set(
+    fractions.map(fraction =>
+      Number(
+        Math.min(
+          Math.max(effectiveDuration * fraction, 0.05),
+          Math.max(effectiveDuration - 0.05, 0.05),
+        ).toFixed(3),
+      ),
+    ),
+  )];
+}
+
+function mixVideoDimensions(dimensions, motionSignal, durationSeconds) {
+  const motionCalm = closeness(motionSignal, 0.18, 0.18);
+  const motionEnergy = clamp(motionSignal / 0.3);
+  const durationNorm = clamp(durationSeconds / 5);
+
+  return {
+    presence: clampScore(
+      dimensions.presence + (motionCalm - 0.5) * 8 + durationNorm * 2,
+    ),
+    depth: clampScore(dimensions.depth + motionEnergy * 5 + durationNorm * 2),
+    connection: clampScore(dimensions.connection + (motionCalm - 0.5) * 6),
+    atmosphere: clampScore(
+      dimensions.atmosphere + motionEnergy * 6 + durationNorm * 3,
+    ),
+    coherence: clampScore(
+      dimensions.coherence + motionCalm * 6 - motionEnergy * 3,
+    ),
+  };
+}
+
+function buildVideoTitle(dimensions, signals, motionPercent) {
+  if (dimensions.coherence >= 84 && motionPercent >= 12 && motionPercent <= 42) {
+    return 'Held in Motion';
+  }
+  if (dimensions.atmosphere >= 84) {
+    return 'Atmospheric Sequence';
+  }
+  if (dimensions.depth >= 84) {
+    return 'Lived Sequence';
+  }
+  if (motionPercent >= 48) {
+    return 'Moving Tension';
+  }
+
+  return pickTitle(dimensions, signals);
+}
+
+function buildVideoSummary(dimensions, motionPercent, durationSeconds) {
+  const strengths = [];
+
+  if (dimensions.atmosphere >= 82) {
+    strengths.push('atmosphere');
+  }
+  if (dimensions.depth >= 82) {
+    strengths.push('temporal depth');
+  }
+  if (dimensions.coherence >= 82) {
+    strengths.push('continuity');
+  }
+  if (!strengths.length) {
+    strengths.push('steady visual residue');
+  }
+
+  const motionDetail =
+    motionPercent >= 45
+      ? 'Motion added urgency and made the clip feel less posed.'
+      : 'The clip stayed controlled enough to read like an intentional memory fragment.';
+
+  return `The clip draws its score from ${strengths.slice(0, 2).join(' and ')} across ${round(
+    durationSeconds,
+  )} seconds. ${motionDetail}`;
+}
+
+function buildVideoExplanation(dimensions, signals, motionPercent, frameCount) {
+  const baseLines = buildExplanation(dimensions, signals).map(line =>
+    line.replace(/image/g, 'clip').replace(/photo/g, 'clip'),
+  );
+
+  baseLines.push(
+    motionPercent >= 45
+      ? `Motion mattered because ${frameCount} sampled frames showed enough change to create pressure instead of a static tableau.`
+      : `Motion stayed relatively calm across ${frameCount} sampled frames, which helped the clip read as stable rather than frantic.`,
+  );
+
+  return baseLines;
+}
+
+function ensureBinary(binaryPath, label) {
+  if (!binaryPath) {
+    throw new Error(`${label} is not available on this server.`);
+  }
+}
+
+function runCommand(binaryPath, args) {
+  ensureBinary(binaryPath, 'Video analysis tooling');
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(binaryPath, args, {
+      windowsHide: true,
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', chunk => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on('data', chunk => {
+      stderr += chunk.toString();
+    });
+
+    child.on('error', reject);
+    child.on('close', code => {
+      if (code === 0) {
+        resolve({stdout, stderr});
+        return;
+      }
+
+      reject(
+        new Error(
+          stderr.trim() || `Video analysis tooling failed with exit code ${code}.`,
+        ),
+      );
+    });
+  });
+}
+
+async function probeVideo(filePath) {
+  const {stdout} = await runCommand(ffprobePath, [
+    '-v',
+    'error',
+    '-select_streams',
+    'v:0',
+    '-show_entries',
+    'stream=width,height:format=duration',
+    '-of',
+    'json',
+    filePath,
+  ]);
+
+  const payload = JSON.parse(stdout || '{}');
+  const stream = (payload.streams && payload.streams[0]) || {};
+
+  return {
+    durationSeconds: Number(payload.format && payload.format.duration) || 0,
+    width: Number(stream.width) || 0,
+    height: Number(stream.height) || 0,
+  };
+}
+
+async function extractFrame(inputPath, outputPath, timestampSeconds) {
+  await runCommand(ffmpegPath, [
+    '-y',
+    '-ss',
+    String(timestampSeconds),
+    '-i',
+    inputPath,
+    '-frames:v',
+    '1',
+    '-q:v',
+    '2',
+    outputPath,
+  ]);
+
+  return fs.readFile(outputPath);
+}
+
+async function analyzeImage(buffer) {
+  const pixels = await imageBufferToPixels(buffer);
+  return {
+    ...analyzePixels(pixels),
+    medium: 'image',
+  };
+}
+
+async function analyzeVideo(buffer) {
+  ensureBinary(ffmpegPath, 'ffmpeg');
+  ensureBinary(ffprobePath, 'ffprobe');
+
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'moments-video-'));
+  const inputPath = path.join(tempDir, 'clip.mp4');
+
+  try {
+    await fs.writeFile(inputPath, buffer);
+
+    const metadata = await probeVideo(inputPath);
+    const clipDurationSeconds = clamp(metadata.durationSeconds || 0, 0.8, 5);
+    const timestamps = buildFrameTimestamps(clipDurationSeconds);
+
+    const pixelFrames = [];
+    const frameAnalyses = [];
+
+    for (let index = 0; index < timestamps.length; index += 1) {
+      const framePath = path.join(tempDir, `frame-${index}.jpg`);
+      const frameBuffer = await extractFrame(inputPath, framePath, timestamps[index]);
+      const pixels = await imageBufferToPixels(frameBuffer);
+      pixelFrames.push(pixels);
+      frameAnalyses.push(analyzePixels(pixels));
+    }
+
+    const baseSignals = averageMetricObjects(
+      frameAnalyses.map(analysis => analysis.signals),
+    );
+    const baseDimensions = averageMetricObjects(
+      frameAnalyses.map(analysis => analysis.dimensions),
+    );
+    const motionSignal = computeFrameMotion(pixelFrames);
+    const motionPercent = round(motionSignal * 100);
+    const dimensions = mixVideoDimensions(
+      baseDimensions,
+      motionSignal,
+      clipDurationSeconds,
+    );
+    const signals = {
+      ...baseSignals,
+      motion: motionPercent,
+      clipLength: round((clipDurationSeconds / 5) * 100),
+    };
+    const score = buildOverallScore(dimensions);
+
+    return {
+      score,
+      tier: pickTier(score),
+      title: buildVideoTitle(dimensions, signals, motionPercent),
+      summary: buildVideoSummary(dimensions, motionPercent, clipDurationSeconds),
+      dimensions,
+      signals,
+      explanation: buildVideoExplanation(
+        dimensions,
+        signals,
+        motionPercent,
+        frameAnalyses.length,
+      ),
+      medium: 'video',
+      clipDurationSeconds: round(clipDurationSeconds),
+      frameCount: frameAnalyses.length,
+    };
+  } finally {
+    await fs.rm(tempDir, {recursive: true, force: true}).catch(() => {});
+  }
+}
+
 module.exports = {
   analyzeImage,
+  analyzeVideo,
   featuredLeaderboard,
 };

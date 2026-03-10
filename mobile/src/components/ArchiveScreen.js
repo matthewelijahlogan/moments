@@ -39,7 +39,23 @@ export function ArchiveScreen({moments, onOpenMoment}) {
           key={moment.id}
           onPress={() => onOpenMoment(moment)}
           style={styles.momentCard}>
-          <Image source={{uri: moment.uri}} style={styles.momentImage} />
+          {moment.mediaType === 'video' ? (
+            <ImageBackground
+              imageStyle={styles.videoPreviewImage}
+              source={assets.hero}
+              style={styles.videoPreview}>
+              <Image source={assets.playIcon} style={styles.videoPreviewIcon} />
+              <Text style={styles.videoPreviewTitle}>Clip capture</Text>
+              <Text style={styles.videoPreviewBody}>
+                {Number(
+                  moment.clipDurationSeconds || moment.durationSeconds || 0,
+                ).toFixed(1)}
+                s sequence
+              </Text>
+            </ImageBackground>
+          ) : (
+            <Image source={{uri: moment.uri}} style={styles.momentImage} />
+          )}
           <ImageBackground
             imageStyle={styles.parchmentImage}
             source={assets.parchment}
@@ -118,6 +134,33 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 220,
     resizeMode: 'cover',
+  },
+  videoPreview: {
+    width: '100%',
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1c1510',
+  },
+  videoPreviewImage: {
+    opacity: 0.24,
+    resizeMode: 'cover',
+  },
+  videoPreviewIcon: {
+    width: 58,
+    height: 58,
+    resizeMode: 'contain',
+    marginBottom: 10,
+  },
+  videoPreviewTitle: {
+    color: '#f8ead1',
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  videoPreviewBody: {
+    marginTop: 6,
+    color: '#cfbc9c',
+    fontSize: 14,
   },
   momentMeta: {
     padding: 18,

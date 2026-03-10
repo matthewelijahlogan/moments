@@ -1,13 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const {analyzeImage, featuredLeaderboard} = require('./src/analyzer');
+const {analyzeImage, analyzeVideo, featuredLeaderboard} = require('./src/analyzer');
 
 const app = express();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024,
+    fileSize: 64 * 1024 * 1024,
   },
 });
 
@@ -48,10 +48,26 @@ app.post('/score-image', upload.single('file'), async (request, response, next) 
   }
 });
 
+app.post('/score-video', upload.single('file'), async (request, response, next) => {
+  try {
+    if (!request.file || !request.file.buffer) {
+      response.status(400).json({
+        error: 'Upload a clip using the "file" field.',
+      });
+      return;
+    }
+
+    const result = await analyzeVideo(request.file.buffer);
+    response.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.use((error, request, response, next) => {
   if (error && error.code === 'LIMIT_FILE_SIZE') {
     response.status(413).json({
-      error: 'Images must be 10MB or smaller.',
+      error: 'Uploads must be 64MB or smaller.',
     });
     return;
   }

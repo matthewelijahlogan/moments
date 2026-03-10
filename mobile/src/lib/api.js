@@ -32,21 +32,32 @@ export function normalizeApiBaseUrl(value) {
   return (value || '').trim().replace(/\/+$/, '');
 }
 
-export async function scoreImage({asset, apiBaseUrl, username}) {
+function isVideoAsset(asset) {
+  return Boolean(
+    asset &&
+      ((asset.type && asset.type.toLowerCase().startsWith('video/')) ||
+        Number(asset.duration) > 0),
+  );
+}
+
+export async function scoreMoment({asset, apiBaseUrl, username}) {
   const normalizedBaseUrl = normalizeApiBaseUrl(apiBaseUrl);
   if (!normalizedBaseUrl) {
     throw new Error('Set a backend URL before scoring a moment.');
   }
 
+  const endpoint = isVideoAsset(asset) ? 'score-video' : 'score-image';
   const formData = new FormData();
   formData.append('file', {
     uri: asset.uri,
     type: asset.type || 'image/jpeg',
-    name: asset.fileName || `moment-${Date.now()}.jpg`,
+    name:
+      asset.fileName ||
+      `moment-${Date.now()}.${isVideoAsset(asset) ? 'mp4' : 'jpg'}`,
   });
   formData.append('username', username || 'ArchiveKeeper');
 
-  const response = await fetch(`${normalizedBaseUrl}/score-image`, {
+  const response = await fetch(`${normalizedBaseUrl}/${endpoint}`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -69,6 +80,8 @@ export async function scoreImage({asset, apiBaseUrl, username}) {
 
   return payload;
 }
+
+export const scoreImage = scoreMoment;
 
 export async function fetchLeaderboard(apiBaseUrl) {
   const normalizedBaseUrl = normalizeApiBaseUrl(apiBaseUrl);

@@ -20,6 +20,11 @@ export function ResultScreen({
     return null;
   }
 
+  const isVideo = moment.mediaType === 'video';
+  const durationLabel = Number(
+    moment.clipDurationSeconds || moment.durationSeconds || 0,
+  ).toFixed(1);
+
   return (
     <ScrollView
       contentContainerStyle={styles.screenScroll}
@@ -27,16 +32,30 @@ export function ResultScreen({
       <Text style={styles.sectionTitle}>Moment analysis</Text>
       <Text style={styles.sectionBody}>
         The score is shaped by memory density, human warmth, visual stability,
-        and how strongly the frame holds together as an experience.
+        and how strongly the {isVideo ? 'clip' : 'frame'} holds together as an experience.
       </Text>
 
-      <Image source={{uri: moment.uri}} style={styles.resultImage} />
+      {isVideo ? (
+        <ImageBackground
+          imageStyle={styles.videoPreviewImage}
+          source={assets.hero}
+          style={styles.videoPreview}>
+          <Image source={assets.playIcon} style={styles.videoPreviewIcon} />
+          <Text style={styles.videoPreviewTitle}>Recorded clip</Text>
+          <Text style={styles.videoPreviewBody}>{durationLabel} second sequence</Text>
+        </ImageBackground>
+      ) : (
+        <Image source={{uri: moment.uri}} style={styles.resultImage} />
+      )}
 
       <ImageBackground
         imageStyle={styles.parchmentImage}
         source={assets.parchment}
         style={styles.resultCard}>
-        <Text style={styles.resultEyebrow}>{moment.tier}</Text>
+        <Text style={styles.resultEyebrow}>
+          {moment.tier}
+          {isVideo ? ` • ${durationLabel}s clip` : ''}
+        </Text>
         <View style={styles.resultHeader}>
           <Text style={styles.resultTitle}>{moment.title}</Text>
           <Text style={styles.resultScore}>{Number(moment.score).toFixed(1)}</Text>
@@ -92,6 +111,37 @@ const styles = StyleSheet.create({
     height: 320,
     borderRadius: 28,
     marginBottom: 16,
+  },
+  videoPreview: {
+    width: '100%',
+    height: 320,
+    borderRadius: 28,
+    marginBottom: 16,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1c1510',
+  },
+  videoPreviewImage: {
+    borderRadius: 28,
+    opacity: 0.24,
+    resizeMode: 'cover',
+  },
+  videoPreviewIcon: {
+    width: 72,
+    height: 72,
+    resizeMode: 'contain',
+    marginBottom: 12,
+  },
+  videoPreviewTitle: {
+    color: '#f8ead1',
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  videoPreviewBody: {
+    marginTop: 8,
+    color: '#cfbc9c',
+    fontSize: 15,
   },
   resultCard: {
     borderRadius: 28,

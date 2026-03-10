@@ -41,10 +41,10 @@ export function HomeScreen({
           <Image source={assets.banner} style={styles.bannerImage} />
           <Text style={styles.heroEyebrow}>Meaning scored from memory signals</Text>
           <Text style={styles.heroTitle}>
-            A retro social camera that rates photos for presence, depth, and human weight.
+            A retro social camera that rates photos and 5-second clips for presence, depth, and human weight.
           </Text>
           <Text style={styles.heroBody}>
-            Moments treats each image like a memory artifact. It looks for warmth,
+            Moments treats each capture like a memory artifact. It looks for warmth,
             narrative tension, atmosphere, composition, and coherence instead of pure polish.
           </Text>
           <View style={styles.heroMetaRow}>
@@ -69,6 +69,13 @@ export function HomeScreen({
           image={<Image source={assets.recordIcon} style={styles.actionIcon} />}
           accent="#ff9c73"
           onPress={() => onAcquireMoment('camera')}
+        />
+        <ActionCard
+          title="Record a Clip"
+          body="Capture up to five seconds of motion and let the engine score continuity, atmosphere, and movement."
+          image={<Image source={assets.playIcon} style={styles.actionIcon} />}
+          accent="#f59d9a"
+          onPress={() => onAcquireMoment('clip')}
         />
         <ActionCard
           title="Choose from Archive"
@@ -99,7 +106,23 @@ export function HomeScreen({
 
       {moments.length > 0 ? (
         <Pressable onPress={() => onOpenMoment(moments[0])} style={styles.latestCard}>
-          <Image source={{uri: moments[0].uri}} style={styles.latestImage} />
+          {moments[0].mediaType === 'video' ? (
+            <ImageBackground
+              imageStyle={styles.latestVideoImage}
+              source={assets.hero}
+              style={styles.latestVideo}>
+              <Image source={assets.playIcon} style={styles.latestVideoIcon} />
+              <Text style={styles.latestVideoTitle}>Latest archived clip</Text>
+              <Text style={styles.latestVideoBody}>
+                {Number(
+                  moments[0].clipDurationSeconds || moments[0].durationSeconds || 0,
+                ).toFixed(1)}
+                s sequence
+              </Text>
+            </ImageBackground>
+          ) : (
+            <Image source={{uri: moments[0].uri}} style={styles.latestImage} />
+          )}
           <View style={styles.latestBody}>
             <Text style={styles.latestLabel}>Latest archived moment</Text>
             <Text style={styles.latestTitle}>{moments[0].title}</Text>
@@ -116,7 +139,7 @@ export function HomeScreen({
           <Image source={assets.maskingTape} style={styles.emptyTape} />
           <Text style={styles.emptyStateTitle}>No archived moments yet</Text>
           <Text style={styles.emptyStateBody}>
-            Analyze a photo and your first memory card will appear here.
+            Analyze a photo or a short clip and your first memory card will appear here.
           </Text>
         </View>
       )}
@@ -251,6 +274,33 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 220,
     resizeMode: 'cover',
+  },
+  latestVideo: {
+    width: '100%',
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1c1510',
+  },
+  latestVideoImage: {
+    opacity: 0.24,
+    resizeMode: 'cover',
+  },
+  latestVideoIcon: {
+    width: 58,
+    height: 58,
+    resizeMode: 'contain',
+    marginBottom: 10,
+  },
+  latestVideoTitle: {
+    color: '#f8ead1',
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  latestVideoBody: {
+    marginTop: 6,
+    color: '#cfbc9c',
+    fontSize: 14,
   },
   latestBody: {
     padding: 18,

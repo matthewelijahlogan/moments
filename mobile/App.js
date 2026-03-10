@@ -5,6 +5,8 @@ import {
   Animated,
   Image,
   ImageBackground,
+  PermissionsAndroid,
+  Platform,
   StatusBar,
   StyleSheet,
   Text,
@@ -26,7 +28,7 @@ import {
   defaultCommunityLeaderboard,
   fetchLeaderboard,
   normalizeApiBaseUrl,
-  scoreImage,
+  scoreMoment,
 } from './src/lib/api';
 import {
   defaultSettings,
@@ -43,6 +45,27 @@ const SCREENS = {
   PROFILE: 'profile',
   RESULT: 'result',
 };
+
+async function ensureCameraPermission() {
+  if (Platform.OS !== 'android') {
+    return true;
+  }
+
+  const permission = PermissionsAndroid.PERMISSIONS.CAMERA;
+  const hasPermission = await PermissionsAndroid.check(permission);
+  if (hasPermission) {
+    return true;
+  }
+
+  const result = await PermissionsAndroid.request(permission, {
+    title: 'Allow camera access',
+    message: 'Moments needs camera access to capture a photo for scoring.',
+    buttonPositive: 'Allow',
+    buttonNegative: 'Not now',
+  });
+
+  return result === PermissionsAndroid.RESULTS.GRANTED;
+}
 
 function App() {
   const [screen, setScreen] = useState(SCREENS.HOME);
@@ -196,19 +219,41 @@ function App() {
   combinedLeaderboard.sort((left, right) => right.score - left.score);
 
   async function handleAcquireMoment(mode) {
-    const picker = mode === 'camera' ? launchCamera : launchImageLibrary;
-    const options = {
-      mediaType: 'photo',
-      quality: 0.9,
-      selectionLimit: 1,
-      includeBase64: false,
-      cameraType: 'back',
-      saveToPhotos: mode === 'camera',
-      maxWidth: 1800,
-      maxHeight: 1800,
-    };
+    const picker = mode === 'library' ? launchImageLibrary : launchCamera;
+    const isClip = mode === 'clip';
+    const options = isClip
+      ? {
+          mediaType: 'video',
+          durationLimit: 5,
+          selectionLimit: 1,
+          includeBase64: false,
+          cameraType: 'back',
+          saveToPhotos: true,
+          videoQuality: 'high',
+        }
+      : {
+          mediaType: 'photo',
+          quality: 0.9,
+          selectionLimit: 1,
+          includeBase64: false,
+          cameraType: 'back',
+          saveToPhotos: mode === 'camera',
+          maxWidth: 1800,
+          maxHeight: 1800,
+        };
 
     try {
+      if (mode === 'camera' || mode === 'clip') {
+        const granted = await ensureCameraPermission();
+        if (!granted) {
+          Alert.alert(
+            'Camera permission needed',
+            'Allow camera access to capture a new photo, or use the library instead.',
+          );
+          return;
+        }
+      }
+
       const result = await picker(options);
 
       if (result.didCancel) {
@@ -225,7 +270,7 @@ function App() {
       }
 
       setIsAnalyzing(true);
-      const scoredMoment = await scoreImage({
+      const scoredMoment = await scoreMoment({
         asset,
         apiBaseUrl: settings.apiBaseUrl,
         username: settings.username,
@@ -239,6 +284,13 @@ function App() {
         createdAt: new Date().toISOString(),
         width: asset.width || 0,
         height: asset.height || 0,
+        mediaType:
+          scoredMoment.medium ||
+          (asset.type && asset.type.toLowerCase().startsWith('video/')
+            ? 'video'
+            : 'image'),
+        durationSeconds:
+          Number(scoredMoment.clipDurationSeconds) || Number(asset.duration) || 0,
         ...scoredMoment,
       };
 
