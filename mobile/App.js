@@ -370,7 +370,7 @@ function App() {
         <StatusBar barStyle="light-content" backgroundColor="#14110f" />
         <View style={styles.appShell}>
           <Image source={assets.tape} style={styles.backgroundTape} />
-          <Image source={assets.buttonsA} style={styles.backgroundCassette} />
+          <Image source={assets.hero} style={styles.backgroundHero} />
           {renderContent()}
           <View style={styles.bottomNav}>
             <NavButton
@@ -435,13 +435,14 @@ const styles = StyleSheet.create({
     opacity: 0.08,
     transform: [{rotate: '-6deg'}],
   },
-  backgroundCassette: {
+  backgroundHero: {
     position: 'absolute',
     right: -70,
-    top: 120,
-    width: 220,
-    height: 220,
-    opacity: 0.1,
+    top: 90,
+    width: 260,
+    height: 140,
+    opacity: 0.08,
+    resizeMode: 'contain',
   },
   loadingScreen: {
     flex: 1,

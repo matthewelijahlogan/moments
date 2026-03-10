@@ -86,7 +86,7 @@ export function HomeScreen({
             transform: [{translateY: cassetteLift}],
           },
         ]}>
-        <Image source={assets.buttonsB} style={styles.featureStripArt} />
+        <Image source={assets.hero} style={styles.featureStripArt} />
         <View style={styles.featureStripText}>
           <Text style={styles.featureStripTitle}>Archive language, not vanity metrics</Text>
           <Text style={styles.featureStripBody}>
