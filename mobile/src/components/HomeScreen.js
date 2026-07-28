@@ -1,361 +1,227 @@
 import React from 'react';
 import {
-  Animated,
   Image,
   ImageBackground,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import {assets} from '../constants/assets';
-import {normalizeApiBaseUrl} from '../lib/api';
-import {ActionCard} from './ui';
 
-export function HomeScreen({
-  cassetteLift,
-  heroOpacity,
-  heroTranslateY,
-  moments,
-  onAcquireMoment,
-  onOpenMoment,
-  settings,
-}) {
+export function HomeScreen({moments, onRecord, settings}) {
+  const latestMoment = moments[0];
+
   return (
-    <ScrollView
-      contentContainerStyle={styles.screenScroll}
-      showsVerticalScrollIndicator={false}>
-      <Animated.View
-        style={[
-          styles.heroCard,
-          {
-            opacity: heroOpacity,
-            transform: [{translateY: heroTranslateY}],
-          },
-        ]}>
-        <ImageBackground
-          imageStyle={styles.parchmentImage}
-          source={assets.parchment}
-          style={styles.heroPaper}>
-          <Image source={assets.banner} style={styles.bannerImage} />
-          <Text style={styles.heroEyebrow}>Meaning scored from memory signals</Text>
-          <Text style={styles.heroTitle}>
-            A retro social camera that rates photos and 5-second clips for presence, depth, and human weight.
-          </Text>
-          <Text style={styles.heroBody}>
-            Moments treats each capture like a memory artifact. It looks for warmth,
-            narrative tension, atmosphere, composition, and coherence instead of pure polish.
-          </Text>
-          <View style={styles.heroMetaRow}>
-            <View style={styles.metaPill}>
-              <Text style={styles.metaPillLabel}>API</Text>
-              <Text style={styles.metaPillValue}>
-                {normalizeApiBaseUrl(settings.apiBaseUrl)}
-              </Text>
-            </View>
-            <View style={styles.metaPill}>
-              <Text style={styles.metaPillLabel}>Handle</Text>
-              <Text style={styles.metaPillValue}>{settings.username}</Text>
-            </View>
-          </View>
-        </ImageBackground>
-      </Animated.View>
+    <ImageBackground
+      imageStyle={styles.roomImage}
+      source={assets.crtRoom}
+      style={styles.room}>
+      <View style={styles.roomShade} />
 
-      <View style={styles.actionStack}>
-        <ActionCard
-          title="Shoot a Moment"
-          body="Open the camera, capture a real-world fragment, and send it straight to the scoring engine."
-          image={<Image source={assets.recordIcon} style={styles.actionIcon} />}
-          accent="#ff9c73"
-          onPress={() => onAcquireMoment('camera')}
-        />
-        <ActionCard
-          title="Record a Clip"
-          body="Capture up to five seconds of motion and let the engine score continuity, atmosphere, and movement."
-          image={<Image source={assets.playIcon} style={styles.actionIcon} />}
-          accent="#f59d9a"
-          onPress={() => onAcquireMoment('clip')}
-        />
-        <ActionCard
-          title="Choose from Archive"
-          body="Import an existing photo and see how your personal history ranks for meaning."
-          image={<Image source={assets.playIcon} style={styles.actionIcon} />}
-          accent="#f3d87c"
-          onPress={() => onAcquireMoment('library')}
-        />
+      <View style={styles.brandTape}>
+        <Image source={assets.maskingTape} style={styles.brandTapeImage} />
+        <Text style={styles.brandTapeText}>MOMENTS / HOME VIDEO</Text>
       </View>
 
-      <Animated.View
-        style={[
-          styles.featureStrip,
-          {
-            transform: [{translateY: cassetteLift}],
-          },
+      <Pressable
+        accessibilityHint="Opens the camera to record a three to five second clip"
+        accessibilityLabel="Record a moment"
+        onPress={onRecord}
+        style={({pressed}) => [
+          styles.tvScreen,
+          pressed ? styles.tvScreenPressed : null,
         ]}>
-        <Image source={assets.hero} style={styles.featureStripArt} />
-        <View style={styles.featureStripText}>
-          <Text style={styles.featureStripTitle}>Archive language, not vanity metrics</Text>
-          <Text style={styles.featureStripBody}>
-            Every score returns a breakdown for presence, depth, connection,
-            atmosphere, and coherence so the rating reads like editorial reasoning,
-            not a random number.
-          </Text>
+        <View style={styles.scanlines} pointerEvents="none" />
+        <View style={styles.recHeader}>
+          <Text style={styles.channelLabel}>CH 03</Text>
+          <Text style={styles.recLabel}>● REC</Text>
         </View>
-      </Animated.View>
-
-      {moments.length > 0 ? (
-        <Pressable onPress={() => onOpenMoment(moments[0])} style={styles.latestCard}>
-          {moments[0].mediaType === 'video' ? (
-            <ImageBackground
-              imageStyle={styles.latestVideoImage}
-              source={assets.hero}
-              style={styles.latestVideo}>
-              <Image source={assets.playIcon} style={styles.latestVideoIcon} />
-              <Text style={styles.latestVideoTitle}>Latest archived clip</Text>
-              <Text style={styles.latestVideoBody}>
-                {Number(
-                  moments[0].clipDurationSeconds || moments[0].durationSeconds || 0,
-                ).toFixed(1)}
-                s sequence
-              </Text>
-            </ImageBackground>
-          ) : (
-            <Image source={{uri: moments[0].uri}} style={styles.latestImage} />
-          )}
-          <View style={styles.latestBody}>
-            <Text style={styles.latestLabel}>Latest archived moment</Text>
-            <Text style={styles.latestTitle}>{moments[0].title}</Text>
-            <Text style={styles.latestSummary} numberOfLines={3}>
-              {moments[0].summary}
-            </Text>
-            <Text style={styles.latestScore}>
-              {Number(moments[0].score).toFixed(1)} / 100
-            </Text>
+        <View style={styles.recordCenter}>
+          <View style={styles.recordRing}>
+            <View style={styles.recordDot} />
           </View>
-        </Pressable>
-      ) : (
-        <View style={styles.emptyStateCard}>
-          <Image source={assets.maskingTape} style={styles.emptyTape} />
-          <Text style={styles.emptyStateTitle}>No archived moments yet</Text>
-          <Text style={styles.emptyStateBody}>
-            Analyze a photo or a short clip and your first memory card will appear here.
+          <Text style={styles.recordTitle}>PRESS TO RECORD</Text>
+          <Text style={styles.recordTiming}>3–5 SECOND HOME VIDEO</Text>
+        </View>
+        <Text style={styles.screenFooter}>
+          KEEP WHAT YOU WILL WANT TO REMEMBER
+        </Text>
+      </Pressable>
+
+      <View style={styles.vhsLabel}>
+        <Image source={assets.maskingTape} style={styles.vhsLabelImage} />
+        <View style={styles.vhsLabelCopy}>
+          <Text style={styles.vhsLabelTitle}>
+            {latestMoment ? latestMoment.title : 'TAPE 001 / READY'}
+          </Text>
+          <Text style={styles.vhsLabelMeta}>
+            {latestMoment
+              ? `${Number(latestMoment.score).toFixed(1)} MEANING SCORE`
+              : `${settings.username} / GENUINE MOMENTS ONLY`}
           </Text>
         </View>
-      )}
-    </ScrollView>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screenScroll: {
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 120,
+  room: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#120b0d',
   },
-  heroCard: {
-    borderRadius: 28,
-    backgroundColor: '#1f1915',
+  roomImage: {
+    resizeMode: 'cover',
+  },
+  roomShade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8, 4, 7, 0.13)',
+  },
+  brandTape: {
+    position: 'absolute',
+    top: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 245,
+    height: 54,
+    transform: [{rotate: '-1.5deg'}],
+  },
+  brandTapeImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'stretch',
+    opacity: 0.93,
+  },
+  brandTapeText: {
+    color: '#231a18',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 1.4,
+  },
+  tvScreen: {
+    position: 'absolute',
+    top: '17.8%',
+    left: '13.8%',
+    right: '13.8%',
+    height: '31.5%',
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(250, 206, 141, 0.22)',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 18,
-    shadowOffset: {width: 0, height: 8},
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: 'rgba(171, 230, 225, 0.18)',
+    backgroundColor: 'rgba(3, 24, 31, 0.62)',
+    shadowColor: '#6ed2d1',
+    shadowOpacity: 0.24,
+    shadowRadius: 16,
+    shadowOffset: {width: 0, height: 0},
     elevation: 8,
   },
-  heroPaper: {
-    padding: 22,
+  tvScreenPressed: {
+    opacity: 0.82,
+    transform: [{scale: 0.985}],
   },
-  parchmentImage: {
-    borderRadius: 28,
-    opacity: 0.9,
+  scanlines: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#b5f5ed',
   },
-  bannerImage: {
-    width: '100%',
-    height: 78,
-    resizeMode: 'contain',
-    marginBottom: 12,
-  },
-  heroEyebrow: {
-    fontSize: 12,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    color: '#624731',
-    marginBottom: 8,
-    fontWeight: '700',
-  },
-  heroTitle: {
-    fontSize: 28,
-    lineHeight: 34,
-    color: '#17110e',
-    fontWeight: '800',
-    marginBottom: 12,
-  },
-  heroBody: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#2f261f',
-  },
-  heroMetaRow: {
-    marginTop: 18,
+  recHeader: {
+    paddingTop: 15,
+    paddingHorizontal: 18,
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  metaPill: {
-    backgroundColor: 'rgba(23, 17, 14, 0.08)',
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  metaPillLabel: {
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    color: '#7d5a40',
-    fontWeight: '700',
-  },
-  metaPillValue: {
-    marginTop: 4,
-    color: '#211913',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  actionStack: {
-    marginTop: 18,
-  },
-  actionIcon: {
-    width: 60,
-    height: 60,
-    resizeMode: 'contain',
-  },
-  featureStrip: {
-    marginTop: 8,
-    borderRadius: 28,
-    backgroundColor: '#18120f',
-    padding: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 184, 92, 0.15)',
-  },
-  featureStripArt: {
-    width: '100%',
-    height: 142,
-    resizeMode: 'cover',
-    borderRadius: 20,
-    marginBottom: 16,
-  },
-  featureStripText: {
-    paddingHorizontal: 2,
-  },
-  featureStripTitle: {
-    color: '#f8ebd2',
-    fontSize: 19,
+  channelLabel: {
+    color: '#a9d1ce',
+    fontSize: 11,
     fontWeight: '800',
-    marginBottom: 6,
+    letterSpacing: 1.5,
   },
-  featureStripBody: {
-    color: '#ccb79a',
-    fontSize: 14,
-    lineHeight: 21,
+  recLabel: {
+    color: '#ff665d',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1.4,
   },
-  latestCard: {
-    marginTop: 16,
-    borderRadius: 28,
-    overflow: 'hidden',
-    backgroundColor: '#211913',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 204, 126, 0.14)',
-  },
-  latestImage: {
-    width: '100%',
-    height: 220,
-    resizeMode: 'cover',
-  },
-  latestVideo: {
-    width: '100%',
-    height: 220,
+  recordCenter: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1c1510',
+    paddingBottom: 5,
   },
-  latestVideoImage: {
-    opacity: 0.24,
-    resizeMode: 'cover',
-  },
-  latestVideoIcon: {
+  recordRing: {
     width: 58,
     height: 58,
-    resizeMode: 'contain',
-    marginBottom: 10,
-  },
-  latestVideoTitle: {
-    color: '#f8ead1',
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  latestVideoBody: {
-    marginTop: 6,
-    color: '#cfbc9c',
-    fontSize: 14,
-  },
-  latestBody: {
-    padding: 18,
-  },
-  latestLabel: {
-    color: '#a88a63',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  latestTitle: {
-    marginTop: 8,
-    color: '#f6e5c7',
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  latestSummary: {
-    marginTop: 8,
-    color: '#d3bfa3',
-    lineHeight: 20,
-  },
-  latestScore: {
-    marginTop: 12,
-    color: '#ffb74a',
-    fontSize: 24,
-    fontWeight: '900',
-  },
-  emptyStateCard: {
-    marginTop: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 28,
-    paddingHorizontal: 20,
-    borderRadius: 28,
-    backgroundColor: '#1f1814',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 196, 128, 0.12)',
+    borderRadius: 29,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 238, 216, 0.72)',
+    backgroundColor: 'rgba(4, 16, 20, 0.45)',
   },
-  emptyTape: {
-    width: 220,
-    height: 70,
-    resizeMode: 'stretch',
-    marginBottom: 12,
-    opacity: 0.42,
+  recordDot: {
+    width: 31,
+    height: 31,
+    borderRadius: 16,
+    backgroundColor: '#d83f3a',
   },
-  emptyStateTitle: {
-    color: '#f8ead1',
-    fontSize: 20,
-    fontWeight: '800',
+  recordTitle: {
+    marginTop: 12,
+    color: '#fff0da',
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: 1.2,
   },
-  emptyStateBody: {
-    marginTop: 8,
-    color: '#c7b59a',
+  recordTiming: {
+    marginTop: 5,
+    color: '#9ec5c4',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+  },
+  screenFooter: {
+    paddingBottom: 13,
+    color: 'rgba(199, 228, 222, 0.72)',
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 0.8,
     textAlign: 'center',
-    lineHeight: 21,
+  },
+  vhsLabel: {
+    position: 'absolute',
+    left: 29,
+    right: 29,
+    bottom: 108,
+    minHeight: 64,
+    justifyContent: 'center',
+    transform: [{rotate: '0.8deg'}],
+  },
+  vhsLabelImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'stretch',
+    opacity: 0.9,
+  },
+  vhsLabelCopy: {
+    paddingHorizontal: 26,
+    paddingVertical: 12,
+  },
+  vhsLabelTitle: {
+    color: '#261d1b',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  vhsLabelMeta: {
+    marginTop: 4,
+    color: '#57433c',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
 });

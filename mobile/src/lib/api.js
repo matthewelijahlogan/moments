@@ -2,28 +2,28 @@ export const defaultCommunityLeaderboard = [
   {
     id: 'featured-quiet-morning',
     username: 'QuietSignal',
-    title: 'Kitchen light at 7:12',
+    title: 'Christmas kitchen at 7:12',
     score: 94.2,
     summary:
-      'High warmth and calm contrast made this read like a lived-in memory instead of a staged shot.',
+      'A short, unforced family exchange held warmth across the tape instead of playing to the camera.',
     source: 'Featured',
   },
   {
     id: 'featured-parking-lot',
     username: 'TapeArchive',
-    title: 'Rain on the lot',
+    title: 'Creek water in July',
     score: 91.7,
     summary:
-      'The frame held strong atmosphere and visual tension, which pushed the meaning score above pure aesthetics.',
+      'Shared motion, laughter, and place made the clip feel lived rather than arranged.',
     source: 'Featured',
   },
   {
     id: 'featured-porch',
     username: 'HumanVoltage',
-    title: 'Shoes on the porch',
+    title: 'Last light from the porch',
     score: 88.6,
     summary:
-      'Intimacy and narrative residue carried the image even though the composition stayed understated.',
+      'Quiet atmosphere carried the tape without needing spectacle or expensive things.',
     source: 'Featured',
   },
 ];
@@ -46,14 +46,18 @@ export async function scoreMoment({asset, apiBaseUrl, username}) {
     throw new Error('Set a backend URL before scoring a moment.');
   }
 
-  const endpoint = isVideoAsset(asset) ? 'score-video' : 'score-image';
+  if (!isVideoAsset(asset)) {
+    throw new Error('Moments accepts 3–5 second video clips only.');
+  }
+
+  const endpoint = 'score-video';
   const formData = new FormData();
   formData.append('file', {
     uri: asset.uri,
-    type: asset.type || 'image/jpeg',
+    type: asset.type || 'video/mp4',
     name:
       asset.fileName ||
-      `moment-${Date.now()}.${isVideoAsset(asset) ? 'mp4' : 'jpg'}`,
+      `moment-${Date.now()}.mp4`,
   });
   formData.append('username', username || 'ArchiveKeeper');
 
@@ -81,8 +85,6 @@ export async function scoreMoment({asset, apiBaseUrl, username}) {
   return payload;
 }
 
-export const scoreImage = scoreMoment;
-
 export async function archiveMoment({
   apiBaseUrl,
   clientId,
@@ -95,13 +97,16 @@ export async function archiveMoment({
   }
 
   const isVideo = moment.mediaType === 'video';
+  if (!isVideo) {
+    throw new Error('Only 3–5 second clips can be archived.');
+  }
   const formData = new FormData();
   formData.append('file', {
     uri: moment.uri,
-    type: moment.mimeType || (isVideo ? 'video/mp4' : 'image/jpeg'),
+    type: moment.mimeType || 'video/mp4',
     name:
       moment.fileName ||
-      `moment-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`,
+      `moment-${Date.now()}.mp4`,
   });
   formData.append('username', username || 'ArchiveKeeper');
   formData.append('clientId', clientId || 'anonymous');
