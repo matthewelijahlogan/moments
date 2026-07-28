@@ -55,6 +55,7 @@ Moments is a retro-styled social photo app that scores images for presence, dept
 ## Backend notes
 
 - Default local URL for the Android emulator is `http://10.0.2.2:3000`.
+- Production scoring API: `https://moments-wb6h.onrender.com`.
 - Render can deploy the backend directly from `backend/` using the included `render.yaml`.
 - The scoring engine is deterministic and explainable. It derives its score from brightness balance, contrast, warmth, color richness, focus, symmetry, and tonal entropy.
 - Scoring still works without Supabase. When Supabase variables are configured, `POST /moments` stores private media plus score metadata and `/leaderboard` returns community entries.
