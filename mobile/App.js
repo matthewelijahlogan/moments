@@ -25,6 +25,7 @@ import {ProfileScreen} from './src/components/ProfileScreen';
 import {ResultScreen} from './src/components/ResultScreen';
 import {NavButton} from './src/components/ui';
 import {
+  archiveMoment,
   defaultCommunityLeaderboard,
   fetchLeaderboard,
   normalizeApiBaseUrl,
@@ -79,6 +80,7 @@ function App() {
   const [activeMoment, setActiveMoment] = useState(null);
   const [hydrated, setHydrated] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
   const [isRefreshingBoard, setIsRefreshingBoard] = useState(false);
 
   const heroOpacity = useRef(new Animated.Value(0)).current;
@@ -207,6 +209,10 @@ function App() {
 
   const combinedLeaderboard = [...featuredLeaderboard];
   moments.forEach(moment => {
+    if (moment.cloudId) {
+      return;
+    }
+
     combinedLeaderboard.push({
       id: `local-${moment.id}`,
       username: settings.username,
@@ -307,9 +313,41 @@ function App() {
     }
   }
 
-  function handleArchiveActiveMoment() {
+  async function handleArchiveActiveMoment() {
     if (!activeMoment) {
       return;
+    }
+
+    setIsArchiving(true);
+    let momentToArchive = {
+      ...activeMoment,
+      archivedAt: new Date().toISOString(),
+    };
+    let cloudArchiveError = null;
+
+    try {
+      const cloudResult = await archiveMoment({
+        apiBaseUrl: settings.apiBaseUrl,
+        clientId: settings.clientId,
+        moment: activeMoment,
+        username: settings.username,
+      });
+
+      momentToArchive = {
+        ...momentToArchive,
+        cloudId: cloudResult.archive.id,
+        cloudArchivedAt: cloudResult.archive.createdAt,
+      };
+      setFeaturedLeaderboard(currentEntries => {
+        const withoutArchivedMoment = currentEntries.filter(
+          entry => entry.id !== cloudResult.archive.id,
+        );
+        return [cloudResult.archive, ...withoutArchivedMoment].sort(
+          (left, right) => Number(right.score) - Number(left.score),
+        );
+      });
+    } catch (error) {
+      cloudArchiveError = error;
     }
 
     setMoments(currentMoments => {
@@ -318,15 +356,21 @@ function App() {
       );
 
       return [
-        {
-          ...activeMoment,
-          archivedAt: new Date().toISOString(),
-        },
+        momentToArchive,
         ...nextMoments,
       ].slice(0, 64);
     });
 
+    setActiveMoment(momentToArchive);
+    setIsArchiving(false);
     setScreen(SCREENS.ARCHIVE);
+
+    if (cloudArchiveError) {
+      Alert.alert(
+        'Saved on this device',
+        `The local archive is safe, but cloud sync was unavailable: ${cloudArchiveError.message}`,
+      );
+    }
   }
 
   function handleOpenMoment(moment) {
@@ -339,6 +383,7 @@ function App() {
       username: usernameDraft.trim() || defaultSettings.username,
       apiBaseUrl:
         normalizeApiBaseUrl(apiDraft) || defaultSettings.apiBaseUrl,
+      clientId: settings.clientId || defaultSettings.clientId,
     };
 
     setSettings(nextSettings);
@@ -395,6 +440,7 @@ function App() {
         return (
           <ResultScreen
             activeMomentSaved={activeMomentSaved}
+            isArchiving={isArchiving}
             moment={activeMoment}
             onAnalyzeAnother={() => setScreen(SCREENS.HOME)}
             onArchive={handleArchiveActiveMoment}
@@ -448,7 +494,7 @@ function App() {
           </View>
         </View>
 
-        {isAnalyzing ? (
+        {isAnalyzing || isArchiving ? (
           <View style={styles.loadingOverlay}>
             <ImageBackground
               imageStyle={styles.loadingCardImage}
@@ -456,10 +502,13 @@ function App() {
               style={styles.loadingCard}>
               <Image source={assets.recordIcon} style={styles.loadingRecord} />
               <ActivityIndicator color="#121212" size="large" />
-              <Text style={styles.loadingCardTitle}>Scoring the moment</Text>
+              <Text style={styles.loadingCardTitle}>
+                {isArchiving ? 'Archiving the moment' : 'Scoring the moment'}
+              </Text>
               <Text style={styles.loadingCardBody}>
-                Sending your image through the backend and turning it into a
-                meaning profile.
+                {isArchiving
+                  ? 'Saving the private media file and publishing its score to the community board.'
+                  : 'Sending your image through the backend and turning it into a meaning profile.'}
               </Text>
             </ImageBackground>
           </View>

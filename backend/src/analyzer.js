@@ -2,7 +2,7 @@ const {spawn} = require('child_process');
 const fs = require('fs/promises');
 const os = require('os');
 const path = require('path');
-const Jimp = require('jimp');
+const {Jimp, intToRGBA} = require('jimp');
 const ffmpegPath = require('ffmpeg-static');
 const ffprobePath = require('ffprobe-static').path;
 
@@ -337,13 +337,13 @@ function buildExplanation(dimensions, signals) {
 
 async function imageBufferToPixels(buffer) {
   const image = await Jimp.read(buffer);
-  image.cover(96, 96);
+  image.cover({w: 96, h: 96});
 
   const pixels = [];
   for (let y = 0; y < image.bitmap.height; y += 1) {
     const row = [];
     for (let x = 0; x < image.bitmap.width; x += 1) {
-      const color = Jimp.intToRGBA(image.getPixelColor(x, y));
+      const color = intToRGBA(image.getPixelColor(x, y));
       row.push([color.r / 255, color.g / 255, color.b / 255]);
     }
     pixels.push(row);

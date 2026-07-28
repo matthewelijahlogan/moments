@@ -83,6 +83,53 @@ export async function scoreMoment({asset, apiBaseUrl, username}) {
 
 export const scoreImage = scoreMoment;
 
+export async function archiveMoment({
+  apiBaseUrl,
+  clientId,
+  moment,
+  username,
+}) {
+  const normalizedBaseUrl = normalizeApiBaseUrl(apiBaseUrl);
+  if (!normalizedBaseUrl) {
+    throw new Error('Set a backend URL before archiving a moment.');
+  }
+
+  const isVideo = moment.mediaType === 'video';
+  const formData = new FormData();
+  formData.append('file', {
+    uri: moment.uri,
+    type: moment.mimeType || (isVideo ? 'video/mp4' : 'image/jpeg'),
+    name:
+      moment.fileName ||
+      `moment-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`,
+  });
+  formData.append('username', username || 'ArchiveKeeper');
+  formData.append('clientId', clientId || 'anonymous');
+
+  const response = await fetch(`${normalizedBaseUrl}/moments`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+    },
+    body: formData,
+  });
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      payload && payload.error
+        ? payload.error
+        : `Cloud archive responded with ${response.status}.`,
+    );
+  }
+
+  if (!payload || !payload.archive || !payload.archive.id) {
+    throw new Error('The cloud archive returned an invalid response.');
+  }
+
+  return payload;
+}
+
 export async function fetchLeaderboard(apiBaseUrl) {
   const normalizedBaseUrl = normalizeApiBaseUrl(apiBaseUrl);
   if (!normalizedBaseUrl) {

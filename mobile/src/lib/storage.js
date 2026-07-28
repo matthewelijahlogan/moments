@@ -3,9 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const MOMENTS_KEY = 'moments.archive.v1';
 const SETTINGS_KEY = 'moments.settings.v1';
 
+function createClientId() {
+  const randomPart = Math.random().toString(36).slice(2, 12);
+  return `device-${Date.now().toString(36)}-${randomPart}`;
+}
+
 export const defaultSettings = {
   username: 'ArchiveKeeper',
   apiBaseUrl: 'http://127.0.0.1:3000',
+  clientId: createClientId(),
 };
 
 export async function loadMoments() {
@@ -41,6 +47,7 @@ export async function loadSettings() {
     return {
       username: parsed.username || defaultSettings.username,
       apiBaseUrl: parsed.apiBaseUrl || defaultSettings.apiBaseUrl,
+      clientId: parsed.clientId || defaultSettings.clientId,
     };
   } catch (error) {
     return defaultSettings;
