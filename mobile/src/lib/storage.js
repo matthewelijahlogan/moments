@@ -10,7 +10,7 @@ function createClientId() {
 
 export const defaultSettings = {
   username: 'ArchiveKeeper',
-  apiBaseUrl: 'http://127.0.0.1:3000',
+  apiBaseUrl: 'https://moments-wb6h.onrender.com',
   clientId: createClientId(),
 };
 
