@@ -136,7 +136,7 @@ async function archiveMoment({analysis, clientId, file, username}) {
   const record = {
     client_id: ownerKey,
     username: normalizeUsername(username),
-    media_type: analysis.medium || 'image',
+    media_type: analysis.medium || 'video',
     storage_path: objectPath,
     score: analysis.score,
     tier: analysis.tier,

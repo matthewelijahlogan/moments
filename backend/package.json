@@ -4,6 +4,7 @@
   "private": true,
   "main": "server.js",
   "scripts": {
+    "check": "node --check server.js && node --check src/analyzer.js && node --check src/persistence.js && node --check src/vision.js && node --check public/app.js",
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
@@ -12,12 +13,19 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.22.0",
+    "@tensorflow/tfjs-backend-wasm": "^4.22.0",
+    "@tensorflow/tfjs-converter": "^4.22.0",
+    "@tensorflow/tfjs-core": "^4.22.0",
+    "@vladmandic/human": "^3.3.6",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "express-rate-limit": "^8.1.0",
     "ffmpeg-static": "^5.2.0",
     "ffprobe-static": "^3.1.0",
     "jimp": "^1.6.1",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "nsfwjs": "^4.3.0"
   }
 }

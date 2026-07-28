@@ -5,33 +5,34 @@ const path = require('path');
 const {Jimp, intToRGBA} = require('jimp');
 const ffmpegPath = require('ffmpeg-static');
 const ffprobePath = require('ffprobe-static').path;
+const {analyzeVisionFrames} = require('./vision');
 
 const featuredLeaderboard = [
   {
     id: 'featured-quiet-morning',
     username: 'QuietSignal',
-    title: 'Kitchen light at 7:12',
+    title: 'Christmas kitchen at 7:12',
     score: 94.2,
     summary:
-      'High warmth and calm contrast made this read like a lived-in memory instead of a staged shot.',
+      'A short, unforced family exchange held warmth across the tape instead of playing to the camera.',
     source: 'Featured',
   },
   {
     id: 'featured-parking-lot',
     username: 'TapeArchive',
-    title: 'Rain on the lot',
+    title: 'Creek water in July',
     score: 91.7,
     summary:
-      'The frame held strong atmosphere and visual tension, which pushed the meaning score above pure aesthetics.',
+      'Shared motion, laughter, and place made the clip feel lived rather than arranged.',
     source: 'Featured',
   },
   {
     id: 'featured-porch',
     username: 'HumanVoltage',
-    title: 'Shoes on the porch',
+    title: 'Last light from the porch',
     score: 88.6,
     summary:
-      'Intimacy and narrative residue carried the image even though the composition stayed understated.',
+      'Quiet atmosphere carried the tape without needing spectacle or expensive things.',
     source: 'Featured',
   },
 ];
@@ -248,6 +249,88 @@ function buildOverallScore(dimensions) {
     dimensions.coherence * 0.15;
 
   return round(weighted);
+}
+
+function applyMeaningSignals(dimensions, vision) {
+  if (!vision) {
+    return dimensions;
+  }
+
+  const warmth = vision.humanWarmth / 100;
+  const continuity = vision.expressionContinuity / 100;
+  const togetherness = vision.togetherness / 100;
+  const hasFaces = vision.faceFrames > 0;
+
+  return {
+    presence: clampScore(
+      dimensions.presence * (hasFaces ? 0.72 : 1) +
+        (hasFaces ? warmth * 28 : 0),
+    ),
+    depth: dimensions.depth,
+    connection: clampScore(
+      dimensions.connection * (hasFaces ? 0.55 : 1) +
+        (hasFaces ? warmth * 31 + togetherness * 14 : 0),
+    ),
+    atmosphere: dimensions.atmosphere,
+    coherence: clampScore(
+      dimensions.coherence * (hasFaces ? 0.78 : 1) +
+        (hasFaces ? continuity * 22 : 0),
+    ),
+  };
+}
+
+function applyMeaningPenalties(score, vision) {
+  if (!vision) {
+    return score;
+  }
+
+  const exposurePenalty = vision.explicitContentRisk * 0.36;
+  const displayPenalty = vision.objectDisplayRisk * 0.1;
+  let adjusted = score - exposurePenalty - displayPenalty;
+
+  if (vision.explicitContentRisk >= 60) {
+    adjusted = Math.min(adjusted, 48);
+  }
+
+  return clampScore(adjusted);
+}
+
+function buildVisionExplanation(vision) {
+  if (!vision) {
+    return [
+      'The open-source vision layer was temporarily unavailable, so this score used motion, light, texture, and continuity only.',
+    ];
+  }
+
+  const lines = [];
+
+  if (vision.faceFrames > 0) {
+    lines.push(
+      `Human warmth measured ${vision.humanWarmth}/100 from visible expression and its continuity across ${vision.faceFrames} sampled frames. This is a visual cue, not a claim about anyone's inner feelings.`,
+    );
+  } else {
+    lines.push(
+      'No clear face persisted across the sampled frames, so the clip was allowed to stand on atmosphere, motion, and composition without a face penalty.',
+    );
+  }
+
+  if (vision.explicitContentRisk >= 18) {
+    lines.push(
+      `The local safety model measured elevated sexualized-content risk (${vision.explicitContentRisk}/100), which reduced the score.`,
+    );
+  } else {
+    lines.push(
+      'The local safety model found little sexualized-content risk, so no meaningful exposure penalty was applied.',
+    );
+  }
+
+  if (vision.objectDisplayRisk >= 25) {
+    lines.push(
+      `A subject-light, object-dominant composition registered ${vision.objectDisplayRisk}/100 for display-first framing and received a modest penalty.`,
+    );
+  }
+
+  return lines;
 }
 
 function pickTier(score) {
@@ -606,16 +689,27 @@ async function analyzeVideo(buffer) {
     await fs.writeFile(inputPath, buffer);
 
     const metadata = await probeVideo(inputPath);
-    const clipDurationSeconds = clamp(metadata.durationSeconds || 0, 0.8, 5);
+    const clipDurationSeconds = Number(metadata.durationSeconds) || 0;
+    if (clipDurationSeconds < 2.85 || clipDurationSeconds > 5.15) {
+      const error = new Error(
+        `Moments accepts clips from 3 to 5 seconds. This clip is ${round(
+          clipDurationSeconds,
+        )} seconds.`,
+      );
+      error.statusCode = 422;
+      throw error;
+    }
     const timestamps = buildFrameTimestamps(clipDurationSeconds);
 
     const pixelFrames = [];
     const frameAnalyses = [];
+    const frameBuffers = [];
 
     for (let index = 0; index < timestamps.length; index += 1) {
       const framePath = path.join(tempDir, `frame-${index}.jpg`);
       const frameBuffer = await extractFrame(inputPath, framePath, timestamps[index]);
       const pixels = await imageBufferToPixels(frameBuffer);
+      frameBuffers.push(frameBuffer);
       pixelFrames.push(pixels);
       frameAnalyses.push(analyzePixels(pixels));
     }
@@ -628,17 +722,29 @@ async function analyzeVideo(buffer) {
     );
     const motionSignal = computeFrameMotion(pixelFrames);
     const motionPercent = round(motionSignal * 100);
-    const dimensions = mixVideoDimensions(
+    const motionDimensions = mixVideoDimensions(
       baseDimensions,
       motionSignal,
       clipDurationSeconds,
     );
+    let vision = null;
+    try {
+      vision = await analyzeVisionFrames(frameBuffers);
+    } catch (error) {
+      console.error('Open-source vision analysis fell back:', error);
+    }
+    const dimensions = applyMeaningSignals(motionDimensions, vision);
     const signals = {
       ...baseSignals,
       motion: motionPercent,
       clipLength: round((clipDurationSeconds / 5) * 100),
+      humanWarmth: vision ? vision.humanWarmth : null,
+      expressionContinuity: vision ? vision.expressionContinuity : null,
+      togetherness: vision ? vision.togetherness : null,
+      explicitContentRisk: vision ? vision.explicitContentRisk : null,
+      objectDisplayRisk: vision ? vision.objectDisplayRisk : null,
     };
-    const score = buildOverallScore(dimensions);
+    const score = applyMeaningPenalties(buildOverallScore(dimensions), vision);
 
     return {
       score,
@@ -647,15 +753,22 @@ async function analyzeVideo(buffer) {
       summary: buildVideoSummary(dimensions, motionPercent, clipDurationSeconds),
       dimensions,
       signals,
-      explanation: buildVideoExplanation(
-        dimensions,
-        signals,
-        motionPercent,
-        frameAnalyses.length,
-      ),
+      explanation: [
+        ...buildVideoExplanation(
+          dimensions,
+          signals,
+          motionPercent,
+          frameAnalyses.length,
+        ),
+        ...buildVisionExplanation(vision),
+      ],
       medium: 'video',
       clipDurationSeconds: round(clipDurationSeconds),
       frameCount: frameAnalyses.length,
+      scoringEngine: vision
+        ? 'local-open-source-vision'
+        : 'local-visual-fallback',
+      vision,
     };
   } finally {
     await fs.rm(tempDir, {recursive: true, force: true}).catch(() => {});

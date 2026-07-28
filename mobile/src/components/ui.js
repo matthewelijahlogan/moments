@@ -20,7 +20,7 @@ export function ActionCard({accent, body, image, onPress, title}) {
   );
 }
 
-export function NavButton({active, label, onPress}) {
+export function NavButton({active, label, onPress, symbol}) {
   return (
     <Pressable
       onPress={onPress}
@@ -29,6 +29,9 @@ export function NavButton({active, label, onPress}) {
         active ? styles.navButtonActive : null,
         pressed ? styles.pressed : null,
       ]}>
+      <Text style={[styles.navSymbol, active ? styles.navSymbolActive : null]}>
+        {symbol}
+      </Text>
       <Text style={[styles.navLabel, active ? styles.navLabelActive : null]}>
         {label}
       </Text>
@@ -137,20 +140,45 @@ const styles = StyleSheet.create({
   },
   navButton: {
     flex: 1,
-    borderRadius: 18,
+    minHeight: 51,
+    marginHorizontal: 3,
+    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: '#080808',
+    borderTopColor: '#56504b',
+    backgroundColor: '#211f1e',
+    shadowColor: '#000',
+    shadowOpacity: 0.6,
+    shadowRadius: 2,
+    shadowOffset: {width: 0, height: 3},
+    elevation: 4,
   },
   navButtonActive: {
-    backgroundColor: '#f1b35a',
+    borderTopColor: '#2b2826',
+    backgroundColor: '#0d0c0c',
+    transform: [{translateY: 2}],
+  },
+  navSymbol: {
+    color: '#c9bfb4',
+    fontSize: 14,
+    fontWeight: '900',
+    lineHeight: 16,
+  },
+  navSymbolActive: {
+    color: '#e94b42',
   },
   navLabel: {
-    color: '#c7b292',
+    marginTop: 3,
+    color: '#b6aaa0',
+    fontSize: 9,
     fontWeight: '800',
+    letterSpacing: 0.8,
   },
   navLabelActive: {
-    color: '#18120d',
+    color: '#f2dfc8',
   },
   primaryButton: {
     backgroundColor: '#f4b65d',

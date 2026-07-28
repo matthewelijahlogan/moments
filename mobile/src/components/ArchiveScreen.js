@@ -18,7 +18,7 @@ export function ArchiveScreen({moments, onOpenMoment}) {
         <Image source={assets.hero} style={styles.emptyHero} />
         <Text style={styles.centeredTitle}>Your archive is empty</Text>
         <Text style={styles.centeredBody}>
-          Start from Home and run a photo through the meaning engine.
+          Start from REC and run a three-to-five-second tape through the meaning engine.
         </Text>
       </View>
     );

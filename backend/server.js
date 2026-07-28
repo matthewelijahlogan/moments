@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const {rateLimit} = require('express-rate-limit');
 const multer = require('multer');
-const {analyzeImage, analyzeVideo, featuredLeaderboard} = require('./src/analyzer');
+const {analyzeVideo, featuredLeaderboard} = require('./src/analyzer');
 const {
   archiveMoment,
   isPersistenceConfigured,
@@ -31,15 +32,13 @@ const upload = multer({
   },
   fileFilter: (request, file, callback) => {
     const supportedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
       'video/mp4',
       'video/quicktime',
+      'video/webm',
     ];
 
     if (!supportedTypes.includes(file.mimetype)) {
-      const error = new Error('Use a JPEG, PNG, WebP, MP4, or MOV file.');
+      const error = new Error('Use a 3–5 second MP4, MOV, or WebM clip.');
       error.statusCode = 415;
       callback(error);
       return;
@@ -60,12 +59,25 @@ app.use(
   }),
 );
 app.use(express.json({limit: '1mb'}));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(
+  '/.moments-vision/human',
+  express.static(path.join(__dirname, 'node_modules', '@vladmandic', 'human', 'models')),
+);
+app.use(
+  '/.moments-vision/wasm',
+  express.static(
+    path.join(__dirname, 'node_modules', '@tensorflow', 'tfjs-backend-wasm', 'dist'),
+  ),
+);
 
 app.get('/health', (request, response) => {
   response.json({
     ok: true,
     service: 'moments-backend',
     persistence: isPersistenceConfigured() ? 'supabase' : 'local-only',
+    scoring: 'local-open-source',
+    capture: 'video-only-3-to-5-seconds',
     timestamp: new Date().toISOString(),
   });
 });
@@ -85,20 +97,10 @@ app.get('/leaderboard', async (request, response, next) => {
   }
 });
 
-app.post('/score-image', scoringLimiter, upload.single('file'), async (request, response, next) => {
-  try {
-    if (!request.file || !request.file.buffer) {
-      response.status(400).json({
-        error: 'Upload a photo using the "file" field.',
-      });
-      return;
-    }
-
-    const result = await analyzeImage(request.file.buffer);
-    response.json(result);
-  } catch (error) {
-    next(error);
-  }
+app.post('/score-image', (request, response) => {
+  response.status(410).json({
+    error: 'Moments now scores 3–5 second video clips instead of photos.',
+  });
 });
 
 app.post('/score-video', scoringLimiter, upload.single('file'), async (request, response, next) => {
@@ -121,15 +123,19 @@ app.post('/moments', archiveLimiter, upload.single('file'), async (request, resp
   try {
     if (!request.file || !request.file.buffer) {
       response.status(400).json({
-        error: 'Upload a photo or clip using the "file" field.',
+        error: 'Upload a 3–5 second clip using the "file" field.',
       });
       return;
     }
 
-    const isVideo = request.file.mimetype.startsWith('video/');
-    const analysis = isVideo
-      ? await analyzeVideo(request.file.buffer)
-      : await analyzeImage(request.file.buffer);
+    if (!request.file.mimetype.startsWith('video/')) {
+      response.status(415).json({
+        error: 'The archive accepts 3–5 second video clips only.',
+      });
+      return;
+    }
+
+    const analysis = await analyzeVideo(request.file.buffer);
     const entry = await archiveMoment({
       analysis,
       clientId: request.body.clientId,

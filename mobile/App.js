@@ -1,8 +1,7 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Image,
   ImageBackground,
   PermissionsAndroid,
@@ -13,10 +12,7 @@ import {
   View,
 } from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
-import {
-  launchCamera,
-  launchImageLibrary,
-} from 'react-native-image-picker';
+import {launchCamera} from 'react-native-image-picker';
 import {assets} from './src/constants/assets';
 import {ArchiveScreen} from './src/components/ArchiveScreen';
 import {HomeScreen} from './src/components/HomeScreen';
@@ -52,20 +48,22 @@ async function ensureCameraPermission() {
     return true;
   }
 
-  const permission = PermissionsAndroid.PERMISSIONS.CAMERA;
-  const hasPermission = await PermissionsAndroid.check(permission);
-  if (hasPermission) {
+  const permissions = [
+    PermissionsAndroid.PERMISSIONS.CAMERA,
+    PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+  ];
+  const current = await Promise.all(
+    permissions.map(permission => PermissionsAndroid.check(permission)),
+  );
+  if (current.every(Boolean)) {
     return true;
   }
 
-  const result = await PermissionsAndroid.request(permission, {
-    title: 'Allow camera access',
-    message: 'Moments needs camera access to capture a photo for scoring.',
-    buttonPositive: 'Allow',
-    buttonNegative: 'Not now',
-  });
+  const result = await PermissionsAndroid.requestMultiple(permissions);
 
-  return result === PermissionsAndroid.RESULTS.GRANTED;
+  return permissions.every(
+    permission => result[permission] === PermissionsAndroid.RESULTS.GRANTED,
+  );
 }
 
 function App() {
@@ -82,10 +80,6 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isRefreshingBoard, setIsRefreshingBoard] = useState(false);
-
-  const heroOpacity = useRef(new Animated.Value(0)).current;
-  const heroTranslateY = useRef(new Animated.Value(18)).current;
-  const cassetteFloat = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     let cancelled = false;
@@ -113,39 +107,6 @@ function App() {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(heroOpacity, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(heroTranslateY, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(cassetteFloat, {
-          toValue: 1,
-          duration: 2300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(cassetteFloat, {
-          toValue: 0,
-          duration: 2300,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-
-    loop.start();
-    return () => loop.stop();
-  }, [cassetteFloat, heroOpacity, heroTranslateY]);
 
   useEffect(() => {
     if (!hydrated) {
@@ -224,43 +185,28 @@ function App() {
   });
   combinedLeaderboard.sort((left, right) => right.score - left.score);
 
-  async function handleAcquireMoment(mode) {
-    const picker = mode === 'library' ? launchImageLibrary : launchCamera;
-    const isClip = mode === 'clip';
-    const options = isClip
-      ? {
-          mediaType: 'video',
-          durationLimit: 5,
-          selectionLimit: 1,
-          includeBase64: false,
-          cameraType: 'back',
-          saveToPhotos: true,
-          videoQuality: 'high',
-        }
-      : {
-          mediaType: 'photo',
-          quality: 0.9,
-          selectionLimit: 1,
-          includeBase64: false,
-          cameraType: 'back',
-          saveToPhotos: mode === 'camera',
-          maxWidth: 1800,
-          maxHeight: 1800,
-        };
+  async function handleRecordMoment() {
+    const options = {
+      mediaType: 'video',
+      durationLimit: 5,
+      selectionLimit: 1,
+      includeBase64: false,
+      cameraType: 'back',
+      saveToPhotos: true,
+      videoQuality: 'high',
+    };
 
     try {
-      if (mode === 'camera' || mode === 'clip') {
-        const granted = await ensureCameraPermission();
-        if (!granted) {
-          Alert.alert(
-            'Camera permission needed',
-            'Allow camera access to capture a new photo, or use the library instead.',
-          );
-          return;
-        }
+      const granted = await ensureCameraPermission();
+      if (!granted) {
+        Alert.alert(
+          'Camera permission needed',
+          'Allow camera access to record a three-to-five-second moment.',
+        );
+        return;
       }
 
-      const result = await picker(options);
+      const result = await launchCamera(options);
 
       if (result.didCancel) {
         return;
@@ -272,7 +218,16 @@ function App() {
 
       const asset = result.assets && result.assets[0];
       if (!asset || !asset.uri) {
-        throw new Error('No image was returned from the picker.');
+        throw new Error('No video was returned from the camera.');
+      }
+
+      const capturedDuration = Number(asset.duration) || 0;
+      if (capturedDuration > 0 && capturedDuration < 3) {
+        Alert.alert(
+          'Let the moment breathe',
+          'Record at least three seconds so the scorer can read motion, continuity, and human presence.',
+        );
+        return;
       }
 
       setIsAnalyzing(true);
@@ -285,16 +240,12 @@ function App() {
       const nextMoment = {
         id: `moment-${Date.now()}`,
         uri: asset.uri,
-        fileName: asset.fileName || `moment-${Date.now()}.jpg`,
-        mimeType: asset.type || 'image/jpeg',
+        fileName: asset.fileName || `moment-${Date.now()}.mp4`,
+        mimeType: asset.type || 'video/mp4',
         createdAt: new Date().toISOString(),
         width: asset.width || 0,
         height: asset.height || 0,
-        mediaType:
-          scoredMoment.medium ||
-          (asset.type && asset.type.toLowerCase().startsWith('video/')
-            ? 'video'
-            : 'image'),
+        mediaType: 'video',
         durationSeconds:
           Number(scoredMoment.clipDurationSeconds) || Number(asset.duration) || 0,
         ...scoredMoment,
@@ -306,7 +257,7 @@ function App() {
       Alert.alert(
         'Analysis failed',
         error.message ||
-          'Moments could not score that image. Confirm the backend URL and try again.',
+          'Moments could not score that clip. Confirm the backend URL and try again.',
       );
     } finally {
       setIsAnalyzing(false);
@@ -396,11 +347,6 @@ function App() {
     activeMoment && moments.some(moment => moment.id === activeMoment.id),
   );
 
-  const cassetteLift = cassetteFloat.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -9],
-  });
-
   function renderContent() {
     if (!hydrated) {
       return (
@@ -450,12 +396,8 @@ function App() {
       default:
         return (
           <HomeScreen
-            cassetteLift={cassetteLift}
-            heroOpacity={heroOpacity}
-            heroTranslateY={heroTranslateY}
             moments={moments}
-            onAcquireMoment={handleAcquireMoment}
-            onOpenMoment={handleOpenMoment}
+            onRecord={handleRecordMoment}
             settings={settings}
           />
         );
@@ -467,28 +409,36 @@ function App() {
       <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="light-content" backgroundColor="#14110f" />
         <View style={styles.appShell}>
-          <Image source={assets.tape} style={styles.backgroundTape} />
-          <Image source={assets.hero} style={styles.backgroundHero} />
+          {screen !== SCREENS.HOME ? (
+            <>
+              <Image source={assets.tape} style={styles.backgroundTape} />
+              <Image source={assets.hero} style={styles.backgroundHero} />
+            </>
+          ) : null}
           {renderContent()}
           <View style={styles.bottomNav}>
             <NavButton
               active={screen === SCREENS.HOME}
-              label="Home"
+              label="REC"
+              symbol="●"
               onPress={() => setScreen(SCREENS.HOME)}
             />
             <NavButton
               active={screen === SCREENS.ARCHIVE}
-              label="Archive"
+              label="TAPES"
+              symbol="◀"
               onPress={() => setScreen(SCREENS.ARCHIVE)}
             />
             <NavButton
               active={screen === SCREENS.LEADERBOARD}
-              label="Board"
+              label="SCORES"
+              symbol="▲"
               onPress={() => setScreen(SCREENS.LEADERBOARD)}
             />
             <NavButton
               active={screen === SCREENS.PROFILE}
-              label="Profile"
+              label="SET"
+              symbol="■"
               onPress={() => setScreen(SCREENS.PROFILE)}
             />
           </View>
@@ -508,7 +458,7 @@ function App() {
               <Text style={styles.loadingCardBody}>
                 {isArchiving
                   ? 'Saving the private media file and publishing its score to the community board.'
-                  : 'Sending your image through the backend and turning it into a meaning profile.'}
+                  : 'Rewinding the clip through motion, warmth, connection, and content signals.'}
               </Text>
             </ImageBackground>
           </View>
@@ -563,16 +513,24 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 18,
+    left: 10,
+    right: 10,
+    bottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(18, 14, 12, 0.96)',
-    borderRadius: 26,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(247, 196, 122, 0.16)',
+    backgroundColor: '#2d2926',
+    borderRadius: 7,
+    paddingHorizontal: 5,
+    paddingTop: 9,
+    paddingBottom: 8,
+    borderWidth: 2,
+    borderColor: '#0b0a09',
+    borderTopColor: '#756b61',
+    shadowColor: '#000',
+    shadowOpacity: 0.8,
+    shadowRadius: 7,
+    shadowOffset: {width: 0, height: 5},
+    elevation: 12,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,

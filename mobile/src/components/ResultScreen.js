@@ -33,7 +33,7 @@ export function ResultScreen({
       <Text style={styles.sectionTitle}>Moment analysis</Text>
       <Text style={styles.sectionBody}>
         The score is shaped by memory density, human warmth, visual stability,
-        and how strongly the {isVideo ? 'clip' : 'frame'} holds together as an experience.
+        and how strongly the clip holds together as an experience.
       </Text>
 
       {isVideo ? (

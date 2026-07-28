@@ -1,11 +1,11 @@
 # Moments
 
-Moments is a retro-styled social photo app that scores images for presence, depth, connection, atmosphere, and coherence instead of surface polish.
+Moments is a phone-first home-video app for three-to-five-second clips. Its 1990s CRT/VHS interface is built around recording first, then preserving the brief pieces of life people will actually want to remember.
 
 ## What changed
 
-- `mobile/` is now the React Native 0.81 Android app in vanilla JavaScript.
-- `backend/` is a Render-ready Node service with image/video scoring, a persistent archive, and a shared leaderboard.
+- `mobile/` is the primary React Native 0.81 phone app.
+- `backend/` is both a Render-ready scoring/archive service and an installable responsive web companion.
 - `supabase/` contains the database and private Storage migration.
 - `com.touchofdavinci.moments/` remains as the legacy Cordova prototype for reference while the new stack replaces it.
 - `MomentsImages/` provides the tape, banner, parchment, and cassette artwork now reused by the React Native client.
@@ -13,7 +13,7 @@ Moments is a retro-styled social photo app that scores images for presence, dept
 ## Project layout
 
 - `mobile/`: React Native app
-- `backend/`: Express + Jimp/FFmpeg image and short-video scoring service
+- `backend/`: Express + FFmpeg + local open-source vision scoring, plus the web/PWA client
 - `render.yaml`: Render service definition for the backend
 - `supabase/migrations/`: Supabase schema, indexes, and private media bucket
 - `MomentsImages/`: shared visual source assets
@@ -57,8 +57,11 @@ Moments is a retro-styled social photo app that scores images for presence, dept
 - Default local URL for the Android emulator is `http://10.0.2.2:3000`.
 - Production scoring API: `https://moments-wb6h.onrender.com`.
 - Render can deploy the backend directly from `backend/` using the included `render.yaml`.
-- The scoring engine is deterministic and explainable. It derives its score from brightness balance, contrast, warmth, color richness, focus, symmetry, and tonal entropy.
+- The service requires no OpenAI key or other hosted-AI key. Open-source model weights run inside the Moments service.
+- The meaning score combines motion, atmosphere, visible face/expression continuity, togetherness, and composition. A local safety model applies a substantial penalty to likely sexualized content; object-dominant, person-light display framing receives a smaller penalty.
+- Visible expression is only a cue. Moments does not claim it can prove whether a person's smile or emotion is genuine.
 - Scoring still works without Supabase. When Supabase variables are configured, `POST /moments` stores private media plus score metadata and `/leaderboard` returns community entries.
+- The same endpoints are used by React Native and the responsive web recorder, so the clip format and scoring behavior remain consistent across clients.
 
 ## Supabase setup
 
@@ -73,13 +76,13 @@ The `moments-media` bucket is private. The mobile app and public website receive
 
 - `GET /health`: service and persistence status
 - `GET /leaderboard?limit=50`: ranked community metadata, or featured fallback entries before Supabase is configured
-- `POST /score-image`: score an image without saving it
-- `POST /score-video`: score a short clip without saving it
+- `POST /score-image`: retired; returns `410 Gone`
+- `POST /score-video`: score a three-to-five-second MP4, MOV, or WebM clip without saving it
 - `POST /moments`: recompute, privately store, and publish a moment's score to the leaderboard
 
 ## Play Store prep still required
 
 - Create a release keystore and wire release signing into `mobile/android/app/build.gradle`.
 - Replace default launcher icons and add a branded feature graphic.
-- Add Supabase Auth before introducing comments, follows, private sharing, or cross-device profile ownership. The current device identifier is deliberately not treated as authentication.
+- Add Supabase Auth before cross-device ownership can be considered secure. Today, both clients share the same service/archive contract, while the local device identifier remains deliberately non-authenticating.
 - Configure the final Render backend URL inside the app profile screen before release testing.
