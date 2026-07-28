@@ -27,8 +27,8 @@ export function ProfileScreen({
       showsVerticalScrollIndicator={false}>
       <Text style={styles.sectionTitle}>Profile and deployment settings</Text>
       <Text style={styles.sectionBody}>
-        This is where you point the app at your Render backend and tune the
-        local identity it uses on leaderboards.
+        Point the app at the Render service and choose the handle attached to
+        scores you publish to the shared Supabase archive.
       </Text>
 
       <View style={styles.statsGrid}>

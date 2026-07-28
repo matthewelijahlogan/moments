@@ -16,9 +16,8 @@ export function LeaderboardScreen({entries, isRefreshing}) {
         <View style={styles.sectionHeaderCopy}>
           <Text style={styles.sectionTitle}>Signal board</Text>
           <Text style={styles.sectionBody}>
-            Featured entries come from the backend when available. Your own
-            archive is mixed in locally so you can see how your best images
-            stack up.
+            Community scores come from the shared archive when available. Local
+            entries stay visible too, so you can compare before cloud sync.
           </Text>
         </View>
         {isRefreshing ? <ActivityIndicator color="#f2b75a" /> : null}

@@ -12,6 +12,7 @@ import {PrimaryButton, ScorePill, SecondaryButton} from './ui';
 
 export function ResultScreen({
   activeMomentSaved,
+  isArchiving,
   moment,
   onAnalyzeAnother,
   onArchive,
@@ -78,9 +79,15 @@ export function ResultScreen({
 
       <View style={styles.resultActions}>
         <PrimaryButton
-          label={activeMomentSaved ? 'Saved to Archive' : 'Archive Result'}
+          label={
+            activeMomentSaved
+              ? 'Saved to Archive'
+              : isArchiving
+                ? 'Archiving...'
+                : 'Archive Result'
+          }
           onPress={onArchive}
-          disabled={activeMomentSaved}
+          disabled={activeMomentSaved || isArchiving}
         />
         <SecondaryButton label="Analyze Another" onPress={onAnalyzeAnother} />
       </View>

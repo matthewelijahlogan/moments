@@ -30,8 +30,8 @@ export function ArchiveScreen({moments, onOpenMoment}) {
       showsVerticalScrollIndicator={false}>
       <Text style={styles.sectionTitle}>Archive</Text>
       <Text style={styles.sectionBody}>
-        Every card is stored locally on device so you can keep iterating before
-        the cloud social layer is added.
+        Every card is stored on this device. When cloud sync is available, its
+        private media file is backed up and its score joins the community board.
       </Text>
 
       {moments.map(moment => (
