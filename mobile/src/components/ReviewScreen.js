@@ -10,13 +10,6 @@ export function ReviewScreen({asset, onRetake, onScore}) {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.eyebrow}>TAPE JUST EJECTED</Text>
-      <Text style={styles.title}>Play it back once.</Text>
-      <Text style={styles.copy}>
-        The camera is off. Nothing is sent for scoring until you choose to keep
-        this tape.
-      </Text>
-
       <View style={styles.tv}>
         <View style={styles.tvScreen}>
           <Video
@@ -28,22 +21,15 @@ export function ReviewScreen({asset, onRetake, onScore}) {
             style={styles.video}
           />
           <View pointerEvents="none" style={styles.scanline} />
-          <Text pointerEvents="none" style={styles.playLabel}>
-            PLAY ▶
-          </Text>
-        </View>
-        <View style={styles.deck}>
-          <View style={styles.slot} />
-          <View style={styles.deckDisplay}>
-            <Text style={styles.deckDisplayText}>PLAY</Text>
-          </View>
-          <View style={styles.knob} />
         </View>
       </View>
 
+      <Text style={styles.copy}>
+        Camera off. Review your moment, then score it or record again.
+      </Text>
       <View style={styles.actions}>
-        <PrimaryButton label="BE KIND, REWIND & SCORE" onPress={onScore} />
-        <SecondaryButton label="Eject It / Record Again" onPress={onRetake} />
+        <PrimaryButton label="SCORE" onPress={onScore} />
+        <SecondaryButton label="RECORD AGAIN" onPress={onRetake} />
       </View>
     </View>
   );
@@ -52,38 +38,20 @@ export function ReviewScreen({asset, onRetake, onScore}) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 120,
-    backgroundColor: '#8e4f59',
-  },
-  eyebrow: {
-    color: '#f2c964',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1.8,
-  },
-  title: {
-    marginTop: 6,
-    color: '#fff0da',
-    fontSize: 30,
-    fontWeight: '900',
-  },
-  copy: {
-    marginTop: 7,
-    marginBottom: 18,
-    color: '#ead7c6',
-    lineHeight: 20,
+    paddingHorizontal: 7,
+    paddingTop: 8,
+    paddingBottom: 24,
+    backgroundColor: '#101313',
   },
   tv: {
+    flex: 1,
     width: '100%',
-    padding: 16,
-    paddingBottom: 0,
-    borderRadius: 30,
-    borderWidth: 5,
-    borderColor: '#151413',
-    borderTopColor: '#5c5650',
-    backgroundColor: '#2a2825',
+    padding: 8,
+    borderRadius: 31,
+    borderWidth: 3,
+    borderColor: '#090a0a',
+    borderTopColor: '#505754',
+    backgroundColor: '#292e2c',
     shadowColor: '#000',
     shadowOpacity: 0.8,
     shadowRadius: 14,
@@ -91,13 +59,13 @@ const styles = StyleSheet.create({
     elevation: 18,
   },
   tvScreen: {
+    flex: 1,
     width: '100%',
-    aspectRatio: 4 / 3,
     overflow: 'hidden',
-    borderRadius: 32,
+    borderRadius: 27,
     borderWidth: 7,
-    borderColor: '#101111',
-    backgroundColor: '#062c30',
+    borderColor: '#080a0a',
+    backgroundColor: '#071b1c',
   },
   video: {
     ...StyleSheet.absoluteFillObject,
@@ -106,55 +74,16 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: 'rgba(213, 255, 249, 0.13)',
+    borderColor: 'rgba(213, 255, 249, 0.08)',
   },
-  playLabel: {
-    position: 'absolute',
-    top: 15,
-    left: 18,
-    color: '#e7f0e7',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1.4,
-    textShadowColor: '#000',
-    textShadowRadius: 2,
-  },
-  deck: {
-    height: 68,
-    flexDirection: 'row',
-    alignItems: 'center',
+  copy: {
+    marginVertical: 13,
     paddingHorizontal: 8,
-  },
-  slot: {
-    flex: 1,
-    height: 19,
-    borderWidth: 2,
-    borderColor: '#0b0a0a',
-    backgroundColor: '#181716',
-  },
-  deckDisplay: {
-    width: 48,
-    height: 23,
-    marginLeft: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#071817',
-  },
-  deckDisplayText: {
-    color: '#72b8a5',
-    fontSize: 8,
-    fontWeight: '800',
-  },
-  knob: {
-    width: 26,
-    height: 26,
-    marginLeft: 10,
-    borderRadius: 13,
-    borderWidth: 3,
-    borderColor: '#111',
-    backgroundColor: '#47413c',
+    color: '#b9c1bc',
+    lineHeight: 19,
+    textAlign: 'center',
   },
   actions: {
-    marginTop: 22,
+    gap: 8,
   },
 });

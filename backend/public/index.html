@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#1a1412" />
+    <meta name="theme-color" content="#111313" />
     <meta
       name="description"
       content="Moments records and scores three-to-five-second home-video memories." />
@@ -13,70 +13,64 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="view active" data-view="record">
-        <div class="room">
-          <div class="wall-panels" aria-hidden="true"></div>
-          <div class="tape-label top-label">MOMENTS / HOME VIDEO</div>
+      <section class="view active recorder-view" data-view="record">
+        <div class="recorder">
+          <div class="brand-label">moments</div>
           <div class="tv-chassis">
-          <div class="crt-screen">
-            <video id="camera" autoplay muted playsinline></video>
-            <video id="playback" controls playsinline hidden></video>
-            <div class="screen-noise" aria-hidden="true"></div>
-            <div class="channel">CH 03</div>
-            <div class="recording-light" id="recordingLight">● REC</div>
-            <button class="record-trigger" id="recordButton" type="button">
-              <span class="record-dot"></span>
-              <strong id="recordLabel">PRESS TO RECORD</strong>
-              <small>3–5 SECOND HOME VIDEO</small>
+            <div class="crt-screen">
+              <video id="camera" autoplay muted playsinline></video>
+              <video id="playback" controls playsinline hidden></video>
+              <div class="screen-noise" aria-hidden="true"></div>
+              <div class="recording-light" id="recordingLight">● REC</div>
+              <button class="record-trigger" id="recordButton" type="button">
+                <span class="record-dot"></span>
+                <strong id="recordLabel">RECORD</strong>
+                <small>3–5 SECONDS</small>
+              </button>
+              <div class="counter" id="counter">00:00</div>
+              <div class="inline-result" id="inlineResult" hidden></div>
+            </div>
+          </div>
+          <div class="record-actions" id="recordActions" hidden>
+            <button class="primary-action" id="reviewScoreButton" type="button">
+              SCORE
             </button>
-            <div class="counter" id="counter">00:00</div>
+            <button class="secondary-action" id="recordAgainButton" type="button">
+              RECORD AGAIN
+            </button>
           </div>
-          <div class="tv-control-panel">
-            <div class="speaker-slots" aria-hidden="true"></div>
-            <div class="tv-knob" aria-hidden="true"></div>
-            <div class="tv-knob small" aria-hidden="true"></div>
-          </div>
-          </div>
-          <div class="vcr-unit">
-            <div class="vcr-slot">VHS HQ</div>
-            <div class="vcr-clock">00:00</div>
-            <div class="vcr-keys"><i>◀◀</i><i>▶</i><i>■</i><i>●</i></div>
-          </div>
-          <button class="rewind-score" id="reviewScoreButton" type="button" hidden>
-            BE KIND, REWIND &amp; SCORE
-          </button>
-          <div class="tape-label bottom-label" id="tapeStatus">TAPE 001 / READY</div>
+          <p class="record-status" id="tapeStatus">READY</p>
         </div>
       </section>
 
       <section class="view panel-view" data-view="tapes">
-        <div class="tape-label section-label">YOUR LAST TAPE</div>
+        <div class="tape-label section-label">YOUR LAST MOMENT</div>
         <div class="paper-card" id="resultCard">
-          <p class="eyebrow">NO TAPE LOADED</p>
+          <p class="eyebrow">NOTHING RECORDED</p>
           <h1>Record a moment first.</h1>
           <p>Your latest score and its visible signals will appear here.</p>
         </div>
         <button class="deck-action" id="archiveButton" type="button" disabled>
-          ARCHIVE THIS TAPE
+          SAVE THIS MOMENT
         </button>
       </section>
 
       <section class="view panel-view" data-view="scores">
-        <div class="tape-label section-label">COMMUNITY TAPES</div>
+        <div class="tape-label section-label">COMMUNITY MOMENTS</div>
         <div id="leaderboard" class="tape-stack">
-          <p>Rewinding the leaderboard…</p>
+          <p>Loading scores…</p>
         </div>
       </section>
 
       <section class="view panel-view" data-view="settings">
-        <div class="tape-label section-label">DECK SETTINGS</div>
+        <div class="tape-label section-label">SETTINGS</div>
         <label class="field">
-          <span>NAME ON TAPE</span>
+          <span>YOUR NAME</span>
           <input id="username" maxlength="32" autocomplete="nickname" />
         </label>
         <p class="settings-copy">
           Scoring runs on open-source models inside the Moments service. No AI
-          provider key is required, and clips are not sent to a third-party AI API.
+          provider key is required, and recordings are not sent to a third-party AI API.
         </p>
         <p class="settings-copy">
           The scorer reads visible cues—motion, faces, expression continuity,
@@ -84,7 +78,7 @@
         </p>
         <div class="oauth-card">
           <p class="eyebrow">ARCHIVE IDENTITY</p>
-          <p id="authStatus">Checking the tape club guest list…</p>
+          <p id="authStatus">Checking sign-in…</p>
           <button class="oauth-button" id="googleSignIn" type="button">
             SIGN IN WITH GOOGLE
           </button>
@@ -98,18 +92,18 @@
       </section>
     </main>
 
-    <nav class="vcr-deck" aria-label="Moments controls">
+    <nav class="app-nav" aria-label="Moments navigation">
       <button class="deck-button active" data-target="record" type="button">
-        <span>●</span> REC
+        <span>●</span> RECORD
       </button>
       <button class="deck-button" data-target="tapes" type="button">
-        <span>◀</span> TAPES
+        <span>◀</span> YOURS
       </button>
       <button class="deck-button" data-target="scores" type="button">
         <span>▲</span> SCORES
       </button>
       <button class="deck-button" data-target="settings" type="button">
-        <span>■</span> SET
+        <span>■</span> SETTINGS
       </button>
     </nav>
 

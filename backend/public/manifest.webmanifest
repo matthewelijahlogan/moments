@@ -1,11 +1,11 @@
 {
-  "name": "Moments — Home Video",
+  "name": "Moments - Home Video",
   "short_name": "Moments",
   "description": "Record and score three-to-five-second home-video memories.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#17110f",
-  "theme_color": "#1a1412",
+  "background_color": "#101313",
+  "theme_color": "#101313",
   "orientation": "portrait-primary",
   "icons": [
     {
