@@ -15,11 +15,9 @@
     <main class="app-shell">
       <section class="view active" data-view="record">
         <div class="room">
-          <img
-            class="room-image"
-            src="/assets/crt-room-90s.png"
-            alt="A warm 1990s living room with a CRT television and VHS tapes" />
+          <div class="wall-panels" aria-hidden="true"></div>
           <div class="tape-label top-label">MOMENTS / HOME VIDEO</div>
+          <div class="tv-chassis">
           <div class="crt-screen">
             <video id="camera" autoplay muted playsinline></video>
             <video id="playback" controls playsinline hidden></video>
@@ -33,6 +31,20 @@
             </button>
             <div class="counter" id="counter">00:00</div>
           </div>
+          <div class="tv-control-panel">
+            <div class="speaker-slots" aria-hidden="true"></div>
+            <div class="tv-knob" aria-hidden="true"></div>
+            <div class="tv-knob small" aria-hidden="true"></div>
+          </div>
+          </div>
+          <div class="vcr-unit">
+            <div class="vcr-slot">VHS HQ</div>
+            <div class="vcr-clock">00:00</div>
+            <div class="vcr-keys"><i>◀◀</i><i>▶</i><i>■</i><i>●</i></div>
+          </div>
+          <button class="rewind-score" id="reviewScoreButton" type="button" hidden>
+            BE KIND, REWIND &amp; SCORE
+          </button>
           <div class="tape-label bottom-label" id="tapeStatus">TAPE 001 / READY</div>
         </div>
       </section>
@@ -70,6 +82,19 @@
           The scorer reads visible cues—motion, faces, expression continuity,
           atmosphere, and content risk. It cannot know a person's inner feelings.
         </p>
+        <div class="oauth-card">
+          <p class="eyebrow">ARCHIVE IDENTITY</p>
+          <p id="authStatus">Checking the tape club guest list…</p>
+          <button class="oauth-button" id="googleSignIn" type="button">
+            SIGN IN WITH GOOGLE
+          </button>
+          <button class="oauth-button" id="appleSignIn" type="button">
+            SIGN IN WITH APPLE
+          </button>
+          <button class="oauth-button" id="signOut" type="button" hidden>
+            SIGN OUT
+          </button>
+        </div>
       </section>
     </main>
 
@@ -89,6 +114,10 @@
     </nav>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="splash" id="splash" aria-label="Moments loading">
+      <img src="/assets/moments-splash.png" alt="moments written in marker on masking tape" />
+    </div>
+    <script src="/.moments-client/supabase.js"></script>
     <script src="/app.js" defer></script>
   </body>
 </html>

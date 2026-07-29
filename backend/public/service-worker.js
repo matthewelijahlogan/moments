@@ -1,12 +1,12 @@
-const CACHE = 'moments-shell-v1';
+const CACHE = 'moments-shell-v2';
 const SHELL = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
   '/manifest.webmanifest',
-  '/assets/crt-room-90s.png',
   '/assets/moments-icon-512.png',
+  '/assets/moments-splash.png',
 ];
 
 self.addEventListener('install', event => {

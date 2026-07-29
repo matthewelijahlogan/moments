@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const {rateLimit} = require('express-rate-limit');
 const multer = require('multer');
+const {createClient} = require('@supabase/supabase-js');
 const {analyzeVideo, featuredLeaderboard} = require('./src/analyzer');
 const {
   archiveMoment,
@@ -12,6 +13,48 @@ const {
 
 const app = express();
 app.set('trust proxy', 1);
+
+function publicAuthClient() {
+  const url = String(process.env.SUPABASE_URL || '').trim();
+  const key = String(process.env.SUPABASE_PUBLISHABLE_KEY || '').trim();
+  return url && key
+    ? createClient(url, key, {
+        auth: {autoRefreshToken: false, persistSession: false},
+      })
+    : null;
+}
+
+async function requireArchiveUser(request, response, next) {
+  const client = publicAuthClient();
+  if (!client) {
+    response.status(503).json({
+      error: 'OAuth is not configured on this Moments service yet.',
+    });
+    return;
+  }
+
+  const authorization = String(request.headers.authorization || '');
+  const token = authorization.startsWith('Bearer ')
+    ? authorization.slice(7).trim()
+    : '';
+  if (!token) {
+    response.status(401).json({
+      error: 'Sign in before saving a tape to the shared archive.',
+    });
+    return;
+  }
+
+  const {data, error} = await client.auth.getUser(token);
+  if (error || !data.user) {
+    response.status(401).json({
+      error: 'Your sign-in expired. Sign in again before archiving.',
+    });
+    return;
+  }
+
+  request.authUser = data.user;
+  next();
+}
 
 const scoringLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -59,6 +102,19 @@ app.use(
   }),
 );
 app.use(express.json({limit: '1mb'}));
+app.get('/.moments-client/supabase.js', (request, response) => {
+  response.sendFile(
+    path.join(
+      __dirname,
+      'node_modules',
+      '@supabase',
+      'supabase-js',
+      'dist',
+      'umd',
+      'supabase.js',
+    ),
+  );
+});
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(
   '/.moments-vision/human',
@@ -79,6 +135,35 @@ app.get('/health', (request, response) => {
     scoring: 'local-open-source',
     capture: 'video-only-3-to-5-seconds',
     timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/auth-config', async (request, response) => {
+  const url = String(process.env.SUPABASE_URL || '').trim();
+  const publishableKey = String(
+    process.env.SUPABASE_PUBLISHABLE_KEY || '',
+  ).trim();
+  let providers = [];
+  if (url && publishableKey) {
+    try {
+      const settingsResponse = await fetch(`${url}/auth/v1/settings`, {
+        headers: {apikey: publishableKey},
+      });
+      const settings = await settingsResponse.json();
+      providers = ['google', 'apple'].filter(
+        provider => settings.external && settings.external[provider],
+      );
+    } catch (error) {
+      console.error('Could not read Supabase provider settings:', error);
+    }
+  }
+
+  response.json({
+    enabled: Boolean(url && publishableKey),
+    supabaseUrl: url || null,
+    publishableKey: publishableKey || null,
+    redirectUrl: `${request.protocol}://${request.get('host')}`,
+    providers,
   });
 });
 
@@ -119,7 +204,12 @@ app.post('/score-video', scoringLimiter, upload.single('file'), async (request, 
   }
 });
 
-app.post('/moments', archiveLimiter, upload.single('file'), async (request, response, next) => {
+app.post(
+  '/moments',
+  archiveLimiter,
+  requireArchiveUser,
+  upload.single('file'),
+  async (request, response, next) => {
   try {
     if (!request.file || !request.file.buffer) {
       response.status(400).json({
@@ -138,7 +228,7 @@ app.post('/moments', archiveLimiter, upload.single('file'), async (request, resp
     const analysis = await analyzeVideo(request.file.buffer);
     const entry = await archiveMoment({
       analysis,
-      clientId: request.body.clientId,
+      clientId: request.authUser.id,
       file: request.file,
       username: request.body.username,
     });
@@ -150,7 +240,8 @@ app.post('/moments', archiveLimiter, upload.single('file'), async (request, resp
   } catch (error) {
     next(error);
   }
-});
+  },
+);
 
 app.use((error, request, response, next) => {
   if (error && error.code === 'LIMIT_FILE_SIZE') {

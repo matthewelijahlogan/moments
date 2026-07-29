@@ -1,6 +1,6 @@
 # Moments
 
-Moments is a phone-first home-video app for three-to-five-second clips. Its 1990s CRT/VHS interface is built around recording first, then preserving the brief pieces of life people will actually want to remember.
+Moments is a phone-first home-video app for three-to-five-second clips. Its scalable 1990s CRT/VCR deck is assembled from interface layers instead of a room photograph.
 
 ## What changed
 
@@ -62,6 +62,16 @@ Moments is a phone-first home-video app for three-to-five-second clips. Its 1990
 - Visible expression is only a cue. Moments does not claim it can prove whether a person's smile or emotion is genuine.
 - Scoring still works without Supabase. When Supabase variables are configured, `POST /moments` stores private media plus score metadata and `/leaderboard` returns community entries.
 - The same endpoints are used by React Native and the responsive web recorder, so the clip format and scoring behavior remain consistent across clients.
+- Capture is explicitly review-first: recording releases the camera, plays the tape back, and waits for **BE KIND, REWIND & SCORE** before uploading anything to the scorer.
+- A generated masking-tape/Sharpie mark is used for the splash screen and install icons.
+
+## OAuth
+
+- Supabase Auth is the shared identity layer for native and web clients.
+- Scoring remains public, but cloud archive writes require a valid Supabase access token. The backend verifies that token and uses the authenticated user ID as archive ownership.
+- Production redirect URLs are `https://moments-wb6h.onrender.com` and `moments://auth/callback`.
+- Set `SUPABASE_PUBLISHABLE_KEY` on Render. The publishable key is safe to expose to clients; the service-role key remains server-only.
+- Google and Apple buttons are provider-aware and remain disabled until their OAuth client ID/secret is enabled in the Supabase Auth dashboard.
 
 ## Supabase setup
 

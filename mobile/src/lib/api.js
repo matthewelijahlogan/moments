@@ -86,6 +86,7 @@ export async function scoreMoment({asset, apiBaseUrl, username}) {
 }
 
 export async function archiveMoment({
+  accessToken,
   apiBaseUrl,
   clientId,
   moment,
@@ -115,6 +116,7 @@ export async function archiveMoment({
     method: 'POST',
     headers: {
       Accept: 'application/json',
+      ...(accessToken ? {Authorization: `Bearer ${accessToken}`} : {}),
     },
     body: formData,
   });

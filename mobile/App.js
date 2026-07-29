@@ -4,6 +4,7 @@ import {
   Alert,
   Image,
   ImageBackground,
+  Linking,
   PermissionsAndroid,
   Platform,
   StatusBar,
@@ -18,6 +19,7 @@ import {ArchiveScreen} from './src/components/ArchiveScreen';
 import {HomeScreen} from './src/components/HomeScreen';
 import {LeaderboardScreen} from './src/components/LeaderboardScreen';
 import {ProfileScreen} from './src/components/ProfileScreen';
+import {ReviewScreen} from './src/components/ReviewScreen';
 import {ResultScreen} from './src/components/ResultScreen';
 import {NavButton} from './src/components/ui';
 import {
@@ -34,9 +36,16 @@ import {
   persistMoments,
   persistSettings,
 } from './src/lib/storage';
+import {
+  beginOAuth,
+  consumeAuthCallback,
+  loadAuthSession,
+  signOut,
+} from './src/lib/auth';
 
 const SCREENS = {
   HOME: 'home',
+  REVIEW: 'review',
   ARCHIVE: 'archive',
   LEADERBOARD: 'leaderboard',
   PROFILE: 'profile',
@@ -76,10 +85,19 @@ function App() {
     defaultCommunityLeaderboard,
   );
   const [activeMoment, setActiveMoment] = useState(null);
+  const [pendingAsset, setPendingAsset] = useState(null);
   const [hydrated, setHydrated] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isRefreshingBoard, setIsRefreshingBoard] = useState(false);
+  const [authSession, setAuthSession] = useState(null);
+  const [authMessage, setAuthMessage] = useState('Checking the tape club guest list…');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 1650);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -157,6 +175,55 @@ function App() {
     };
   }, [hydrated, settings.apiBaseUrl]);
 
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+
+    let active = true;
+
+    async function acceptUrl(url) {
+      try {
+        const session = await consumeAuthCallback(settings.apiBaseUrl, url);
+        if (active && session) {
+          setAuthSession(session);
+          setAuthMessage('Signed in. Your tapes can follow you across devices.');
+        }
+      } catch (error) {
+        if (active) {
+          setAuthMessage(error.message);
+        }
+      }
+    }
+
+    loadAuthSession(settings.apiBaseUrl)
+      .then(session => {
+        if (active) {
+          setAuthSession(session);
+          setAuthMessage(
+            session
+              ? 'Signed in. Your tapes can follow you across devices.'
+              : 'Sign in to own tapes across phone and web.',
+          );
+        }
+      })
+      .catch(error => {
+        if (active) {
+          setAuthMessage(error.message);
+        }
+      });
+
+    Linking.getInitialURL().then(acceptUrl);
+    const subscription = Linking.addEventListener('url', event =>
+      acceptUrl(event.url),
+    );
+
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, [hydrated, settings.apiBaseUrl]);
+
   const archivedScores = moments.map(moment => Number(moment.score) || 0);
   const averageScore = archivedScores.length
     ? archivedScores.reduce((sum, score) => sum + score, 0) /
@@ -230,42 +297,84 @@ function App() {
         return;
       }
 
-      setIsAnalyzing(true);
-      const scoredMoment = await scoreMoment({
-        asset,
-        apiBaseUrl: settings.apiBaseUrl,
-        username: settings.username,
-      });
-
-      const nextMoment = {
-        id: `moment-${Date.now()}`,
-        uri: asset.uri,
-        fileName: asset.fileName || `moment-${Date.now()}.mp4`,
-        mimeType: asset.type || 'video/mp4',
-        createdAt: new Date().toISOString(),
-        width: asset.width || 0,
-        height: asset.height || 0,
-        mediaType: 'video',
-        durationSeconds:
-          Number(scoredMoment.clipDurationSeconds) || Number(asset.duration) || 0,
-        ...scoredMoment,
-      };
-
-      setActiveMoment(nextMoment);
-      setScreen(SCREENS.RESULT);
+      setPendingAsset(asset);
+      setScreen(SCREENS.REVIEW);
     } catch (error) {
       Alert.alert(
         'Analysis failed',
         error.message ||
           'Moments could not score that clip. Confirm the backend URL and try again.',
       );
+    }
+  }
+
+  async function handleScorePendingMoment() {
+    if (!pendingAsset) {
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const scoredMoment = await scoreMoment({
+        asset: pendingAsset,
+        apiBaseUrl: settings.apiBaseUrl,
+        username: settings.username,
+      });
+      const nextMoment = {
+        id: `moment-${Date.now()}`,
+        uri: pendingAsset.uri,
+        fileName: pendingAsset.fileName || `moment-${Date.now()}.mp4`,
+        mimeType: pendingAsset.type || 'video/mp4',
+        createdAt: new Date().toISOString(),
+        width: pendingAsset.width || 0,
+        height: pendingAsset.height || 0,
+        mediaType: 'video',
+        durationSeconds:
+          Number(scoredMoment.clipDurationSeconds) ||
+          Number(pendingAsset.duration) ||
+          0,
+        ...scoredMoment,
+      };
+
+      setActiveMoment(nextMoment);
+      setPendingAsset(null);
+      setScreen(SCREENS.RESULT);
+    } catch (error) {
+      Alert.alert(
+        'Scoring failed',
+        error.message || 'Moments could not score that tape right now.',
+      );
     } finally {
       setIsAnalyzing(false);
     }
   }
 
+  function handleRetake() {
+    setPendingAsset(null);
+    setScreen(SCREENS.HOME);
+    setTimeout(handleRecordMoment, 150);
+  }
+
   async function handleArchiveActiveMoment() {
     if (!activeMoment) {
+      return;
+    }
+
+    if (!authSession?.access_token) {
+      const locallyArchived = {
+        ...activeMoment,
+        archivedAt: activeMoment.archivedAt || new Date().toISOString(),
+      };
+      setMoments(currentMoments => [
+        locallyArchived,
+        ...currentMoments.filter(moment => moment.id !== activeMoment.id),
+      ]);
+      setActiveMoment(locallyArchived);
+      setScreen(SCREENS.PROFILE);
+      Alert.alert(
+        'Sign in to archive',
+        'Your scored tape is still on this phone. Sign in with Google or Apple to save it to the shared archive.',
+      );
       return;
     }
 
@@ -278,6 +387,7 @@ function App() {
 
     try {
       const cloudResult = await archiveMoment({
+        accessToken: authSession.access_token,
         apiBaseUrl: settings.apiBaseUrl,
         clientId: settings.clientId,
         moment: activeMoment,
@@ -324,6 +434,26 @@ function App() {
     }
   }
 
+  async function handleOAuth(provider) {
+    try {
+      setAuthMessage(`Opening ${provider} sign-in…`);
+      await beginOAuth(settings.apiBaseUrl, provider);
+    } catch (error) {
+      setAuthMessage(error.message);
+      Alert.alert('Sign-in unavailable', error.message);
+    }
+  }
+
+  async function handleSignOut() {
+    try {
+      await signOut(settings.apiBaseUrl);
+      setAuthSession(null);
+      setAuthMessage('Signed out. Tapes already on this phone remain here.');
+    } catch (error) {
+      Alert.alert('Could not sign out', error.message);
+    }
+  }
+
   function handleOpenMoment(moment) {
     setActiveMoment(moment);
     setScreen(SCREENS.RESULT);
@@ -344,7 +474,7 @@ function App() {
   }
 
   const activeMomentSaved = Boolean(
-    activeMoment && moments.some(moment => moment.id === activeMoment.id),
+    activeMoment && activeMoment.cloudId,
   );
 
   function renderContent() {
@@ -372,14 +502,26 @@ function App() {
         return (
           <ProfileScreen
             apiDraft={apiDraft}
+            authMessage={authMessage}
+            authUser={authSession?.user || null}
             averageScore={averageScore}
             moments={moments}
             momentsThisMonth={momentsThisMonth}
             onSaveProfile={handleSaveProfile}
+            onSignIn={handleOAuth}
+            onSignOut={handleSignOut}
             setApiDraft={setApiDraft}
             setUsernameDraft={setUsernameDraft}
             topScore={topScore}
             usernameDraft={usernameDraft}
+          />
+        );
+      case SCREENS.REVIEW:
+        return (
+          <ReviewScreen
+            asset={pendingAsset}
+            onRetake={handleRetake}
+            onScore={handleScorePendingMoment}
           />
         );
       case SCREENS.RESULT:
@@ -408,6 +550,12 @@ function App() {
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="light-content" backgroundColor="#14110f" />
+        {showSplash || !hydrated ? (
+          <View style={styles.splashScreen}>
+            <Image source={assets.splash} style={styles.splashImage} />
+          </View>
+        ) : (
+          <>
         <View style={styles.appShell}>
           {screen !== SCREENS.HOME ? (
             <>
@@ -416,6 +564,7 @@ function App() {
             </>
           ) : null}
           {renderContent()}
+          {screen !== SCREENS.REVIEW ? (
           <View style={styles.bottomNav}>
             <NavButton
               active={screen === SCREENS.HOME}
@@ -442,6 +591,7 @@ function App() {
               onPress={() => setScreen(SCREENS.PROFILE)}
             />
           </View>
+          ) : null}
         </View>
 
         {isAnalyzing || isArchiving ? (
@@ -463,6 +613,8 @@ function App() {
             </ImageBackground>
           </View>
         ) : null}
+          </>
+        )}
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -476,6 +628,18 @@ const styles = StyleSheet.create({
   appShell: {
     flex: 1,
     backgroundColor: '#14110f',
+  },
+  splashScreen: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#17110f',
+  },
+  splashImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
   },
   backgroundTape: {
     position: 'absolute',
