@@ -74,14 +74,17 @@ const upload = multer({
     fileSize: 64 * 1024 * 1024,
   },
   fileFilter: (request, file, callback) => {
-    const supportedTypes = [
-      'video/mp4',
-      'video/quicktime',
-      'video/webm',
-    ];
+    const mimeType = String(file.mimetype || '').toLowerCase();
+    const browserRecordedVideo =
+      mimeType.startsWith('video/') ||
+      ['application/mp4', 'application/x-matroska', 'application/octet-stream'].includes(
+        mimeType,
+      );
 
-    if (!supportedTypes.includes(file.mimetype)) {
-      const error = new Error('Use a 3–5 second MP4, MOV, or WebM clip.');
+    if (!browserRecordedVideo) {
+      const error = new Error(
+        'That recording could not be read. Record another moment and try again.',
+      );
       error.statusCode = 415;
       callback(error);
       return;
@@ -192,7 +195,7 @@ app.post('/score-video', scoringLimiter, upload.single('file'), async (request, 
   try {
     if (!request.file || !request.file.buffer) {
       response.status(400).json({
-        error: 'Upload a clip using the "file" field.',
+        error: 'No recording reached the scorer. Record another moment and try again.',
       });
       return;
     }
@@ -213,7 +216,7 @@ app.post(
   try {
     if (!request.file || !request.file.buffer) {
       response.status(400).json({
-        error: 'Upload a 3–5 second clip using the "file" field.',
+        error: 'No recording reached the archive. Record another moment and try again.',
       });
       return;
     }
@@ -246,7 +249,7 @@ app.post(
 app.use((error, request, response, next) => {
   if (error && error.code === 'LIMIT_FILE_SIZE') {
     response.status(413).json({
-      error: 'Uploads must be 64MB or smaller.',
+      error: 'That recording is too large. Keep it between three and five seconds.',
     });
     return;
   }

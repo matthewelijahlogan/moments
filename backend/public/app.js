@@ -2,6 +2,9 @@ const camera = document.querySelector('#camera');
 const playback = document.querySelector('#playback');
 const recordButton = document.querySelector('#recordButton');
 const reviewScoreButton = document.querySelector('#reviewScoreButton');
+const recordAgainButton = document.querySelector('#recordAgainButton');
+const recordActions = document.querySelector('#recordActions');
+const inlineResult = document.querySelector('#inlineResult');
 const recordLabel = document.querySelector('#recordLabel');
 const recordingLight = document.querySelector('#recordingLight');
 const counter = document.querySelector('#counter');
@@ -52,10 +55,13 @@ function resetRecorder() {
   playback.removeAttribute('src');
   playback.hidden = true;
   recordButton.hidden = false;
-  reviewScoreButton.hidden = true;
+  recordActions.hidden = true;
+  reviewScoreButton.hidden = false;
+  inlineResult.hidden = true;
+  inlineResult.innerHTML = '';
   archiveButton.disabled = true;
-  archiveButton.textContent = 'ARCHIVE THIS TAPE';
-  tapeStatus.textContent = 'TAPE 001 / READY';
+  archiveButton.textContent = 'SAVE THIS MOMENT';
+  tapeStatus.textContent = 'READY';
 }
 
 function showView(target) {
@@ -145,7 +151,7 @@ async function startRecording() {
   recordButton.classList.add('recording');
   recordingLight.classList.add('on');
   recordLabel.textContent = 'HOLD THE MOMENT';
-  tapeStatus.textContent = 'TAPE 001 / RECORDING';
+  tapeStatus.textContent = 'RECORDING';
   timer = setInterval(updateCounter, 100);
 }
 
@@ -169,8 +175,9 @@ async function finishRecording() {
   playback.hidden = false;
   camera.hidden = true;
   recordButton.hidden = true;
+  recordActions.hidden = false;
   reviewScoreButton.hidden = false;
-  tapeStatus.textContent = 'TAPE 001 / PLAY IT BACK';
+  tapeStatus.textContent = 'REVIEW';
   counter.textContent = '00:00';
   await playback.play().catch(() => {});
 }
@@ -180,8 +187,9 @@ async function scoreRecording() {
     return;
   }
   reviewScoreButton.disabled = true;
-  reviewScoreButton.textContent = 'REWINDING THROUGH THE MEANING…';
-  tapeStatus.textContent = 'TAPE 001 / SCORING';
+  recordAgainButton.disabled = true;
+  reviewScoreButton.textContent = 'SCORING…';
+  tapeStatus.textContent = 'SCORING — THIS CAN TAKE A MOMENT';
 
   try {
     const form = new FormData();
@@ -195,17 +203,15 @@ async function scoreRecording() {
     result = payload;
     renderResult(payload);
     archiveButton.disabled = false;
-    tapeStatus.textContent = `${payload.title.toUpperCase()} / ${Number(
-      payload.score,
-    ).toFixed(1)}`;
+    tapeStatus.textContent = 'SCORED';
     reviewScoreButton.hidden = true;
-    showView('tapes');
   } catch (error) {
     showToast(error.message);
-    tapeStatus.textContent = 'TAPE 001 / TRY AGAIN';
+    tapeStatus.textContent = 'COULD NOT SCORE — TRY AGAIN';
   } finally {
     reviewScoreButton.disabled = false;
-    reviewScoreButton.textContent = 'BE KIND, REWIND & SCORE';
+    recordAgainButton.disabled = false;
+    reviewScoreButton.textContent = 'SCORE';
   }
 }
 
@@ -221,6 +227,14 @@ recordButton.addEventListener('click', async () => {
   }
 });
 reviewScoreButton.addEventListener('click', scoreRecording);
+recordAgainButton.addEventListener('click', async () => {
+  resetRecorder();
+  try {
+    await ensureCamera();
+  } catch (error) {
+    showToast(error.message);
+  }
+});
 
 function escapeHtml(value) {
   return String(value)
@@ -241,7 +255,7 @@ function renderResult(moment) {
   const reasons = (moment.explanation || [])
     .map(line => `<li>${escapeHtml(line)}</li>`)
     .join('');
-  resultCard.innerHTML = `
+  const resultMarkup = `
     <p class="eyebrow">${escapeHtml(moment.tier)} · ${Number(
       moment.clipDurationSeconds,
     ).toFixed(1)}S TAPE</p>
@@ -250,6 +264,9 @@ function renderResult(moment) {
     <div class="dimensions">${dimensions}</div>
     <ul>${reasons}</ul>
   `;
+  resultCard.innerHTML = resultMarkup;
+  inlineResult.innerHTML = resultMarkup;
+  inlineResult.hidden = false;
 }
 
 archiveButton.addEventListener('click', async () => {
@@ -263,7 +280,7 @@ archiveButton.addEventListener('click', async () => {
   }
 
   archiveButton.disabled = true;
-  archiveButton.textContent = 'ARCHIVING…';
+  archiveButton.textContent = 'SAVING…';
   try {
     const form = new FormData();
     form.append('file', recordedBlob, `moment-${Date.now()}.webm`);
@@ -277,12 +294,12 @@ archiveButton.addEventListener('click', async () => {
     if (!response.ok) {
       throw new Error(payload.error || `Archive failed (${response.status}).`);
     }
-    archiveButton.textContent = 'SAVED TO ARCHIVE';
-    tapeStatus.textContent = `${result.title.toUpperCase()} / ARCHIVED`;
+    archiveButton.textContent = 'SAVED';
+    tapeStatus.textContent = 'SAVED';
     await loadLeaderboard();
   } catch (error) {
     archiveButton.disabled = false;
-    archiveButton.textContent = 'ARCHIVE THIS TAPE';
+    archiveButton.textContent = 'SAVE THIS MOMENT';
     showToast(error.message);
   }
 });

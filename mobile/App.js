@@ -259,7 +259,7 @@ function App() {
       selectionLimit: 1,
       includeBase64: false,
       cameraType: 'back',
-      saveToPhotos: true,
+      saveToPhotos: false,
       videoQuality: 'high',
     };
 
@@ -549,7 +549,7 @@ function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" backgroundColor="#14110f" />
+        <StatusBar barStyle="light-content" backgroundColor="#101313" />
         {showSplash || !hydrated ? (
           <View style={styles.splashScreen}>
             <Image source={assets.splash} style={styles.splashImage} />
@@ -623,11 +623,11 @@ function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#14110f',
+    backgroundColor: '#101313',
   },
   appShell: {
     flex: 1,
-    backgroundColor: '#14110f',
+    backgroundColor: '#101313',
   },
   splashScreen: {
     ...StyleSheet.absoluteFillObject,
