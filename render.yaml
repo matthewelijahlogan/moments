@@ -16,5 +16,7 @@ services:
         sync: false
       - key: SUPABASE_STORAGE_BUCKET
         value: moments-media
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
       - key: CORS_ORIGINS
         value: https://touchofdavinci.onrender.com

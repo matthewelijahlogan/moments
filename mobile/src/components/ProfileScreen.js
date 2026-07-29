@@ -8,14 +8,18 @@ import {
   View,
 } from 'react-native';
 import {assets} from '../constants/assets';
-import {PrimaryButton, StatCard} from './ui';
+import {PrimaryButton, SecondaryButton, StatCard} from './ui';
 
 export function ProfileScreen({
   apiDraft,
+  authMessage,
+  authUser,
   averageScore,
   moments,
   momentsThisMonth,
   onSaveProfile,
+  onSignIn,
+  onSignOut,
   setApiDraft,
   setUsernameDraft,
   topScore,
@@ -82,6 +86,30 @@ export function ProfileScreen({
           style={styles.settingsButton}
         />
       </ImageBackground>
+
+      <View style={styles.authCard}>
+        <Text style={styles.authEyebrow}>ARCHIVE IDENTITY</Text>
+        <Text style={styles.authTitle}>
+          {authUser
+            ? authUser.email || authUser.user_metadata?.name || 'Tape keeper'
+            : 'Take your tapes with you'}
+        </Text>
+        <Text style={styles.authBody}>{authMessage}</Text>
+        {authUser ? (
+          <SecondaryButton label="Sign Out" onPress={onSignOut} />
+        ) : (
+          <>
+            <PrimaryButton
+              label="Sign In with Google"
+              onPress={() => onSignIn('google')}
+            />
+            <SecondaryButton
+              label="Sign In with Apple"
+              onPress={() => onSignIn('apple')}
+            />
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -141,5 +169,31 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     marginTop: 6,
+  },
+  authCard: {
+    marginTop: 18,
+    padding: 18,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#4c4641',
+    backgroundColor: '#24211f',
+  },
+  authEyebrow: {
+    color: '#d8b967',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.7,
+  },
+  authTitle: {
+    marginTop: 7,
+    color: '#f8ead1',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  authBody: {
+    marginTop: 7,
+    marginBottom: 14,
+    color: '#cbbca5',
+    lineHeight: 19,
   },
 });

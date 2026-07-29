@@ -52,16 +52,22 @@ button {
   width: min(100%, 640px);
   min-height: calc(100dvh - 84px);
   margin: 0 auto;
+  padding: 82px 18px 125px;
   overflow: hidden;
-  background: #241816;
+  background: #8e4f59;
 }
 
-.room-image {
+.wall-panels {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  opacity: 0.22;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent calc(16.66% - 2px),
+    #3d212b calc(16.66% - 2px),
+    #3d212b 16.66%
+  );
 }
 
 .room::after {
@@ -76,7 +82,7 @@ button {
       transparent 3px,
       rgb(0 0 0 / 0.08) 4px
     ),
-    linear-gradient(to bottom, rgb(15 8 8 / 0.05), rgb(15 8 8 / 0.33));
+    linear-gradient(to bottom, rgb(15 8 8 / 0.03), rgb(15 8 8 / 0.22));
 }
 
 .tape-label {
@@ -100,7 +106,7 @@ button {
 
 .bottom-label {
   left: 50%;
-  bottom: 22px;
+  bottom: 28px;
   max-width: 88%;
   transform: translateX(-50%) rotate(1deg);
   overflow: hidden;
@@ -108,16 +114,26 @@ button {
   white-space: nowrap;
 }
 
-.crt-screen {
-  position: absolute;
+.tv-chassis {
+  position: relative;
   z-index: 2;
-  top: 24%;
-  left: 21%;
-  width: 58%;
+  width: min(100%, 540px);
+  margin: 0 auto;
+  padding: 18px 18px 0;
+  border: 5px solid #171615;
+  border-top-color: #635c55;
+  border-radius: 36px;
+  background: #2b2926;
+  box-shadow: 0 15px 24px rgb(0 0 0 / 0.58);
+}
+
+.crt-screen {
+  position: relative;
+  width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border: 9px solid #191717;
-  border-radius: 15% / 12%;
+  border: 8px solid #111212;
+  border-radius: 13% / 11%;
   background: #042b2d;
   box-shadow:
     inset 0 0 40px #000,
@@ -215,13 +231,122 @@ button {
   transform: scale(0.65);
 }
 
+.tv-control-panel {
+  display: flex;
+  align-items: center;
+  height: 62px;
+  padding: 10px 8px;
+}
+
+.speaker-slots {
+  flex: 1;
+  width: 80px;
+  height: 25px;
+  background: repeating-linear-gradient(
+    90deg,
+    #111 0,
+    #111 4px,
+    transparent 4px,
+    transparent 10px
+  );
+}
+
+.tv-knob {
+  width: 32px;
+  height: 32px;
+  margin-left: 12px;
+  border: 3px solid #111;
+  border-radius: 50%;
+  background: #48423d;
+}
+
+.tv-knob.small {
+  width: 20px;
+  height: 20px;
+}
+
+.vcr-unit {
+  position: relative;
+  z-index: 3;
+  width: min(84%, 455px);
+  height: 91px;
+  margin: 7px auto 0;
+  padding: 10px;
+  border: 3px solid #090909;
+  border-top-color: #57514b;
+  border-radius: 5px;
+  background: #242220;
+  box-shadow: 0 10px 14px rgb(0 0 0 / 0.5);
+}
+
+.vcr-slot {
+  height: 25px;
+  padding: 7px 12px;
+  color: #77716b;
+  border: 2px solid #0d0d0d;
+  background: #171615;
+  font-size: 7px;
+}
+
+.vcr-clock {
+  position: absolute;
+  bottom: 11px;
+  left: 12px;
+  padding: 7px 13px;
+  color: #7ab7a7;
+  background: #081919;
+  font-size: 10px;
+}
+
+.vcr-keys {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.vcr-keys i {
+  display: grid;
+  width: 35px;
+  height: 26px;
+  place-items: center;
+  color: #aaa198;
+  border: 1px solid #57524c;
+  background: #302e2b;
+  font-style: normal;
+  font-size: 9px;
+}
+
+.vcr-keys i:last-child {
+  color: #d85046;
+}
+
+.rewind-score {
+  position: relative;
+  z-index: 5;
+  display: block;
+  width: min(88%, 475px);
+  margin: 18px auto 0;
+  padding: 15px 10px;
+  color: #251d18;
+  border: 0;
+  background: #ded0a8;
+  box-shadow: 5px 6px 0 rgb(0 0 0 / 0.45);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  transform: rotate(-0.6deg);
+}
+
+.rewind-score[hidden] {
+  display: none;
+}
+
 .panel-view {
   width: min(100%, 680px);
   margin: auto;
   padding: max(46px, calc(env(safe-area-inset-top) + 24px)) 20px 30px;
-  background:
-    linear-gradient(rgb(20 15 13 / 0.78), rgb(20 15 13 / 0.95)),
-    url("/assets/crt-room-90s.png") center / cover fixed;
+  background: #5c343d;
 }
 
 .section-label {
@@ -384,6 +509,51 @@ button {
   transform: translateY(0);
 }
 
+.oauth-card {
+  margin-top: 16px;
+  padding: 18px;
+  color: #251d18;
+  background: #ded0a8;
+  box-shadow: 5px 7px 0 rgb(0 0 0 / 0.4);
+}
+
+.oauth-button {
+  width: 100%;
+  margin-top: 8px;
+  padding: 13px 8px;
+  color: #eee4d1;
+  border: 2px solid #4a4642;
+  background: #24211f;
+  box-shadow: 0 3px 0 #080808;
+  font-weight: 900;
+}
+
+.oauth-button[hidden] {
+  display: none;
+}
+
+.splash {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #17110f;
+  opacity: 1;
+  transition: opacity 300ms ease;
+}
+
+.splash img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.splash.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
 @keyframes blink {
   50% {
     opacity: 0.25;
@@ -392,13 +562,7 @@ button {
 
 @media (min-width: 760px) {
   .room {
-    min-height: calc(100dvh - 84px);
-  }
-
-  .crt-screen {
-    top: 23%;
-    left: 23%;
-    width: 54%;
+    padding-inline: 42px;
   }
 }
 

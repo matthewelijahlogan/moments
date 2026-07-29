@@ -11,18 +11,21 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@supabase/supabase-js": "^2.57.4",
     "react": "19.1.0",
     "react-native": "0.81.0",
     "react-native-image-picker": "^8.2.1",
-    "react-native-safe-area-context": "^5.5.2"
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-url-polyfill": "^3.0.0",
+    "react-native-video": "^6.17.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
-    "@react-native-community/cli": "20.0.0",
-    "@react-native-community/cli-platform-android": "20.0.0",
-    "@react-native-community/cli-platform-ios": "20.0.0",
+    "@react-native-community/cli": "^20.2.0",
+    "@react-native-community/cli-platform-android": "^20.2.0",
+    "@react-native-community/cli-platform-ios": "^20.2.0",
     "@react-native/babel-preset": "0.81.0",
     "@react-native/eslint-config": "0.81.0",
     "@react-native/metro-config": "0.81.0",
