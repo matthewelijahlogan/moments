@@ -14,10 +14,10 @@ export function LeaderboardScreen({entries, isRefreshing}) {
       showsVerticalScrollIndicator={false}>
       <View style={styles.sectionHeaderRow}>
         <View style={styles.sectionHeaderCopy}>
-          <Text style={styles.sectionTitle}>Signal board</Text>
+          <Text style={styles.sectionTitle}>Meaning board</Text>
           <Text style={styles.sectionBody}>
-            Community scores come from the shared archive when available. Local
-            entries stay visible too, so you can compare before cloud sync.
+            The highest-graded moments from the shared archive. Every score is
+            a read of the visible story captured in a few seconds.
           </Text>
         </View>
         {isRefreshing ? <ActivityIndicator color="#f2b75a" /> : null}

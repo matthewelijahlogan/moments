@@ -30,10 +30,10 @@ export function ResultScreen({
     <ScrollView
       contentContainerStyle={styles.screenScroll}
       showsVerticalScrollIndicator={false}>
-      <Text style={styles.sectionTitle}>Moment analysis</Text>
+      <Text style={styles.sectionTitle}>Your moment grade</Text>
       <Text style={styles.sectionBody}>
-        The score is shaped by memory density, human warmth, visual stability,
-        and how strongly the clip holds together as an experience.
+        The grade reads visible details—movement, composition, connection, and
+        continuity—to estimate how much meaning the clip holds in a few frames.
       </Text>
 
       {isVideo ? (
@@ -84,12 +84,12 @@ export function ResultScreen({
               ? 'Saved to Archive'
               : isArchiving
                 ? 'Archiving...'
-                : 'Archive Result'
+                : 'Keep this moment'
           }
           onPress={onArchive}
           disabled={activeMomentSaved || isArchiving}
         />
-        <SecondaryButton label="Analyze Another" onPress={onAnalyzeAnother} />
+        <SecondaryButton label="Capture Another" onPress={onAnalyzeAnother} />
       </View>
     </ScrollView>
   );

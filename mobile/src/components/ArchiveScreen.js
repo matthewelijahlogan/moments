@@ -18,7 +18,7 @@ export function ArchiveScreen({moments, onOpenMoment}) {
         <Image source={assets.hero} style={styles.emptyHero} />
         <Text style={styles.centeredTitle}>Your archive is empty</Text>
         <Text style={styles.centeredBody}>
-          Start from REC and run a three-to-five-second tape through the meaning engine.
+          Start from REC and keep a three-to-five-second piece of your day.
         </Text>
       </View>
     );
@@ -31,7 +31,7 @@ export function ArchiveScreen({moments, onOpenMoment}) {
       <Text style={styles.sectionTitle}>Archive</Text>
       <Text style={styles.sectionBody}>
         Every card is stored on this device. When cloud sync is available, its
-        private media file is backed up and its score joins the community board.
+        private media file is backed up and its grade joins the meaning board.
       </Text>
 
       {moments.map(moment => (

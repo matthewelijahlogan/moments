@@ -25,10 +25,10 @@ export function ReviewScreen({asset, onRetake, onScore}) {
       </View>
 
       <Text style={styles.copy}>
-        Camera off. Review your moment, then score it or record again.
+        Camera off. Review your moment, then grade it or record again.
       </Text>
       <View style={styles.actions}>
-        <PrimaryButton label="SCORE" onPress={onScore} />
+        <PrimaryButton label="GRADE THIS MOMENT" onPress={onScore} />
         <SecondaryButton label="RECORD AGAIN" onPress={onRetake} />
       </View>
     </View>

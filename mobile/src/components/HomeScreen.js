@@ -12,7 +12,7 @@ export function HomeScreen({onRecord}) {
 
       <View style={styles.tv}>
         <Pressable
-          accessibilityHint="Records a three to five second clip"
+          accessibilityHint="Records a three to five second clip worth keeping"
           accessibilityLabel="Record a moment"
           onPress={onRecord}
           style={({pressed}) => [
@@ -28,7 +28,7 @@ export function HomeScreen({onRecord}) {
             <Text style={styles.recordTiming}>3–5 SECONDS</Text>
           </View>
           <Text style={styles.screenFooter}>
-            KEEP WHAT YOU WILL WANT TO REMEMBER
+            KEEP THE LITTLE THINGS
           </Text>
         </Pressable>
       </View>
