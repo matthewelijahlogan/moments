@@ -623,18 +623,18 @@ function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#101313',
+    backgroundColor: '#8e4f59',
   },
   appShell: {
     flex: 1,
-    backgroundColor: '#101313',
+    backgroundColor: '#8e4f59',
   },
   splashScreen: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#17110f',
+    backgroundColor: '#8e4f59',
   },
   splashImage: {
     width: '100%',
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
     bottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#2d2926',
+    backgroundColor: '#2b2926',
     borderRadius: 7,
     paddingHorizontal: 5,
     paddingTop: 9,
