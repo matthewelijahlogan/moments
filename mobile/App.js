@@ -236,26 +236,12 @@ function App() {
   }).length;
 
   const combinedLeaderboard = [...featuredLeaderboard];
-  moments.forEach(moment => {
-    if (moment.cloudId) {
-      return;
-    }
-
-    combinedLeaderboard.push({
-      id: `local-${moment.id}`,
-      username: settings.username,
-      title: moment.title,
-      score: Number(moment.score) || 0,
-      summary: moment.summary,
-      source: 'Your archive',
-    });
-  });
   combinedLeaderboard.sort((left, right) => right.score - left.score);
 
   async function handleRecordMoment() {
     const options = {
       mediaType: 'video',
-      durationLimit: 5,
+      durationLimit: 4,
       selectionLimit: 1,
       includeBase64: false,
       cameraType: 'back',
@@ -268,7 +254,7 @@ function App() {
       if (!granted) {
         Alert.alert(
           'Camera permission needed',
-          'Allow camera access to record a three-to-five-second moment.',
+          'Allow camera access to record a two-to-four-second moment.',
         );
         return;
       }
@@ -289,10 +275,10 @@ function App() {
       }
 
       const capturedDuration = Number(asset.duration) || 0;
-      if (capturedDuration > 0 && capturedDuration < 3) {
+      if (capturedDuration > 0 && capturedDuration < 2) {
         Alert.alert(
           'Let the moment breathe',
-          'Record at least three seconds so the scorer can read motion, continuity, and human presence.',
+          'Record at least two seconds so the scorer can read motion, continuity, and human presence.',
         );
         return;
       }
@@ -359,6 +345,10 @@ function App() {
     if (!activeMoment) {
       return;
     }
+    if (activeMoment.eligibleForLeaderboard !== true || activeMoment.moderation?.status !== 'approved') {
+      Alert.alert('Not eligible', 'This clip has not cleared safety screening and ranking.');
+      return;
+    }
 
     if (!authSession?.access_token) {
       const locallyArchived = {
@@ -372,8 +362,8 @@ function App() {
       setActiveMoment(locallyArchived);
       setScreen(SCREENS.PROFILE);
       Alert.alert(
-        'Sign in to archive',
-        'Your scored tape is still on this phone. Sign in with Google or Apple to save it to the shared archive.',
+        'Sign in to share',
+        'Your scored tape is still on this phone. Sign in with Google or Apple, then choose Share on meaning board to publish it.',
       );
       return;
     }

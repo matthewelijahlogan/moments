@@ -15,34 +15,34 @@
         <header class="topbar"><a class="wordmark" href="#capture" aria-label="Moments home">moments<span>.</span></a><button class="quiet-button" data-target="about" type="button">How it works</button></header>
         <div class="capture-layout">
           <div class="intro-copy">
-            <p class="kicker">A tiny video journal</p><h1>Keep the little things.</h1><p>Take a three-to-five second clip of something you’ll be glad you noticed. No performance required.</p>
+            <p class="kicker">A tiny video journal</p><h1>Keep the little things.</h1><p>Take a two-to-four second clip of something you’ll be glad you noticed. No performance required.</p>
             <div class="prompt-card"><span class="prompt-mark">✦</span><p id="promptText">What feels ordinary now, but won’t forever?</p><button id="newPrompt" class="text-button" type="button">Another prompt</button></div>
           </div>
           <div class="camera-card">
             <div class="camera-frame"><video id="camera" autoplay muted playsinline></video><video id="playback" controls playsinline hidden></video><div class="camera-empty" id="cameraEmpty"><span>◌</span><p>Your camera opens here.</p></div><div class="recording-badge" id="recordingLight" hidden><i></i> Recording <span id="counter">0:00</span></div><div class="reflection-overlay" id="inlineResult" hidden></div></div>
-            <div class="capture-controls"><button class="record-button" id="recordButton" type="button" aria-label="Start recording"><span class="record-dot"></span><span id="recordLabel">Record a moment</span></button><p class="capture-status" id="tapeStatus">Ready when you are · 3–5 seconds</p></div>
+            <div class="capture-controls"><button class="record-button" id="recordButton" type="button" aria-label="Start recording"><span class="record-dot"></span><span id="recordLabel">Record a moment</span></button><p class="capture-status" id="tapeStatus">Ready when you are · 2–4 seconds</p></div>
             <div class="review-actions" id="recordActions" hidden><button class="button primary-action" id="reviewScoreButton" type="button">Get a reflection</button><button class="button secondary-action" id="recordAgainButton" type="button">Try another</button></div>
           </div>
         </div>
       </section>
       <section class="view content-view" data-view="library">
         <header class="topbar"><a class="wordmark" href="#capture">moments<span>.</span></a><p class="topbar-label">Your library</p></header>
-        <div class="section-heading"><p class="kicker">Your saved clips</p><h1>A small record of your days.</h1><p>Saved moments stay on this device. Sign in if you’d like to back them up privately.</p></div>
+        <div class="section-heading"><p class="kicker">Your saved clips</p><h1>A small record of your days.</h1><p>Saved moments stay on this device. Sign in to share eligible clips on the meaning board.</p></div>
         <div id="savedMoments" class="moment-grid"><div class="empty-state"><span>⌁</span><h2>Nothing saved yet.</h2><p>Make a short clip, reflect on it, and keep the ones that matter.</p><button class="text-button" data-target="capture" type="button">Capture your first moment</button></div></div>
       </section>
       <section class="view content-view" data-view="scores">
         <header class="topbar"><a class="wordmark" href="#capture">moments<span>.</span></a><p class="topbar-label">Meaning board</p></header>
-        <div class="section-heading"><p class="kicker">The shared archive</p><h1>Small scenes. Lasting weight.</h1><p>Each entry is graded from the visible story in a few seconds: connection, movement, atmosphere, and the way a moment holds together.</p></div>
+        <div class="section-heading"><p class="kicker">The shared archive</p><h1>Small scenes. Lasting weight.</h1><p>Screened two-to-four-second clips ranked for care, connection, wonder, and presence. A collective glimpse of what makes life meaningful. No likes, follower counts, or wealth bonuses.</p></div>
         <div id="leaderboard" class="moment-grid"><div class="empty-state"><span>✦</span><h2>Loading the board…</h2></div></div>
       </section>
       <section class="view content-view" data-view="about">
         <header class="topbar"><a class="wordmark" href="#capture">moments<span>.</span></a><p class="topbar-label">The idea</p></header>
         <div class="section-heading narrow"><p class="kicker">Less feed, more feeling</p><h1>Make room for what you’d otherwise scroll past.</h1><p>Moments is for the in-between scenes: a kitchen laugh, a train window, a dog asleep in the sun.</p></div>
-        <div class="steps"><article><span>01</span><h2>Capture</h2><p>Record one unpolished clip, three to five seconds long.</p></article><article><span>02</span><h2>Reflect</h2><p>We look at visible cues like movement and composition and offer a gentle read—not a verdict on what it means.</p></article><article><span>03</span><h2>Keep</h2><p>Save the moments you want to return to. Your library is yours.</p></article></div>
+        <div class="steps"><article><span>01</span><h2>Capture</h2><p>Record one unpolished clip, two to four seconds long.</p></article><article><span>02</span><h2>Reflect</h2><p>Safety comes first. Eligible clips receive a purity grade for care, connection, wonder, and presence. Display-first and sexualized framing lower the grade.</p></article><article><span>03</span><h2>Keep</h2><p>Keep screened moments and share them on the meaning board. Tender affection belongs here; sexual exploitation never does.</p></article></div>
       </section>
       <section class="view content-view" data-view="settings">
         <header class="topbar"><a class="wordmark" href="#capture">moments<span>.</span></a><p class="topbar-label">Settings</p></header>
-        <div class="settings-layout"><div class="section-heading narrow"><p class="kicker">Your space</p><h1>Make it yours.</h1></div><label class="field"><span>Your name</span><input id="username" maxlength="32" autocomplete="nickname" /></label><div class="oauth-card"><p class="kicker">Private backup</p><h2>Keep your library with you.</h2><p id="authStatus">Checking sign-in…</p><button class="button secondary-action oauth-button" id="googleSignIn" type="button">Continue with Google</button><button class="button secondary-action oauth-button" id="appleSignIn" type="button">Continue with Apple</button><button class="text-button oauth-button" id="signOut" type="button" hidden>Sign out</button></div><p class="fine-print">Reflections are generated from visible video cues. They cannot tell what people feel or what a moment means to you.</p></div>
+        <div class="settings-layout"><div class="section-heading narrow"><p class="kicker">Your space</p><h1>Make it yours.</h1></div><label class="field"><span>Your name</span><input id="username" maxlength="32" autocomplete="nickname" /></label><div class="oauth-card"><p class="kicker">Share your moments</p><h2>Keep your library with you.</h2><p id="authStatus">Checking sign-in…</p><button class="button secondary-action oauth-button" id="googleSignIn" type="button">Continue with Google</button><button class="button secondary-action oauth-button" id="appleSignIn" type="button">Continue with Apple</button><button class="text-button oauth-button" id="signOut" type="button" hidden>Sign out</button></div><p class="fine-print">Reflections are generated from visible video cues. They cannot tell what people feel or what a moment means to you.</p></div>
       </section>
     </main>
     <nav class="app-nav" aria-label="Moments navigation"><button class="nav-button active" data-target="capture" type="button"><span>＋</span>Capture</button><button class="nav-button" data-target="library" type="button"><span>⌁</span>Library</button><button class="nav-button" data-target="scores" type="button"><span>✦</span>Scores</button><button class="nav-button" data-target="settings" type="button"><span>◌</span>Settings</button></nav>

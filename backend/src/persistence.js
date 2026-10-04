@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const path = require('path');
 const {createClient} = require('@supabase/supabase-js');
+const {requirePublishable, POLICY_VERSION} = require('./moderation');
+const {ENGINE_VERSION} = require('./meaning');
 
 const DEFAULT_BUCKET = 'moments-media';
 const MAX_LEADERBOARD_SIZE = 100;
@@ -81,11 +83,11 @@ function serializeLeaderboardRow(row) {
     medium: row.media_type,
     createdAt: row.created_at,
     source: 'Community',
+    videoUrl: `/moments/${row.id}/video`,
   };
 }
 
-async function listLeaderboard(limit = 50) {
-  const supabase = getClient();
+async function listLeaderboard(limit = 50, supabase = getClient()) {
   if (!supabase) {
     return null;
   }
@@ -100,6 +102,9 @@ async function listLeaderboard(limit = 50) {
       'id, username, title, score, summary, tier, media_type, created_at',
     )
     .eq('published', true)
+    .eq('moderation_status', 'approved')
+    .eq('moderation_policy_version', POLICY_VERSION)
+    .eq('scoring_version', ENGINE_VERSION)
     .order('score', {ascending: false})
     .order('created_at', {ascending: true})
     .limit(safeLimit);
@@ -112,6 +117,7 @@ async function listLeaderboard(limit = 50) {
 }
 
 async function archiveMoment({analysis, clientId, file, username}) {
+  requirePublishable(analysis, file.buffer);
   const supabase = getClient();
   if (!supabase) {
     const error = new Error('Cloud archive is not configured.');
@@ -147,6 +153,11 @@ async function archiveMoment({analysis, clientId, file, username}) {
     explanation: analysis.explanation,
     clip_duration_seconds: analysis.clipDurationSeconds || null,
     published: true,
+    moderation_status: analysis.moderation.status,
+    moderation_policy_version: analysis.moderation.policyVersion,
+    moderation_evidence: analysis.moderation,
+    content_hash: analysis.moderation.contentHash,
+    scoring_version: analysis.scoringVersion,
   };
   const {data, error: insertError} = await supabase
     .from('moments')
@@ -170,4 +181,18 @@ module.exports = {
   listLeaderboard,
   normalizeClientId,
   normalizeUsername,
+  getPublishedVideoUrl,
 };
+
+async function getPublishedVideoUrl(id, supabase = getClient()) {
+  if (!supabase || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const {data, error} = await supabase.from('moments').select('storage_path')
+    .eq('id', id).eq('published', true).eq('moderation_status', 'approved')
+    .eq('moderation_policy_version', POLICY_VERSION).eq('scoring_version', ENGINE_VERSION).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const signed = await supabase.storage.from(process.env.SUPABASE_STORAGE_BUCKET || DEFAULT_BUCKET)
+    .createSignedUrl(data.storage_path, 60);
+  if (signed.error) throw signed.error;
+  return signed.data.signedUrl;
+}

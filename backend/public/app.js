@@ -86,10 +86,10 @@ $('#newPrompt').addEventListener('click', () => { promptIndex = (promptIndex + 1
 username.addEventListener('change', () => { username.value = username.value.trim(); localStorage.setItem('moments.username', username.value); });
 
 function supportedMimeType() { return ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'].find(type => MediaRecorder.isTypeSupported(type)) || ''; }
-function updateCounter() { const elapsed = Math.min((Date.now()-startedAt)/1000,5); counter.textContent = `0:0${Math.floor(elapsed)}`; if (elapsed >= 5 && recorder?.state === 'recording') recorder.stop(); }
+function updateCounter() { const elapsed = Math.min((Date.now()-startedAt)/1000,4); counter.textContent = `0:0${Math.floor(elapsed)}`; if (elapsed >= 4 && recorder?.state === 'recording') recorder.stop(); }
 function resetRecorder() {
   clearInterval(timer); if (playback.src) URL.revokeObjectURL(playback.src);
-  recordedBlob = null; result = null; playback.removeAttribute('src'); playback.hidden = true; camera.hidden = false; reflection.hidden = true; reflection.innerHTML = ''; recordButton.hidden = false; recordButton.classList.remove('recording'); recordButton.setAttribute('aria-label','Start recording'); recordActions.hidden = true; reviewButton.hidden = false; status.textContent = 'Ready when you are · 3–5 seconds'; counter.textContent = '0:00';
+  recordedBlob = null; result = null; playback.removeAttribute('src'); playback.hidden = true; camera.hidden = false; reflection.hidden = true; reflection.innerHTML = ''; recordButton.hidden = false; recordButton.classList.remove('recording'); recordButton.setAttribute('aria-label','Start recording'); recordActions.hidden = true; reviewButton.hidden = false; status.textContent = 'Ready when you are · 2–4 seconds'; counter.textContent = '0:00';
 }
 async function startRecording() {
   if (!window.MediaRecorder) throw new Error('This browser cannot record video. Try a current version of Safari or Chrome.');
@@ -97,9 +97,9 @@ async function startRecording() {
   const type = supportedMimeType(); recorder = new MediaRecorder(activeStream, type ? {mimeType:type} : undefined);
   recorder.addEventListener('dataavailable', event => { if (event.data.size) chunks.push(event.data); });
   recorder.addEventListener('stop', finishRecording, {once:true}); recorder.start(250); startedAt = Date.now(); timer = setInterval(updateCounter,100);
-  recordButton.classList.add('recording'); recordButton.setAttribute('aria-label','Stop recording'); $('#recordLabel').textContent = 'Stop recording'; recordingLight.hidden = false; status.textContent = 'Hold onto the scene for at least three seconds';
+  recordButton.classList.add('recording'); recordButton.setAttribute('aria-label','Stop recording'); $('#recordLabel').textContent = 'Stop recording'; recordingLight.hidden = false; status.textContent = 'Hold onto the scene for at least two seconds';
 }
-function stopRecording() { if ((Date.now()-startedAt)/1000 < 3) { showToast('Give it another moment—clips need to be at least three seconds.'); return; } recorder.stop(); }
+function stopRecording() { if ((Date.now()-startedAt)/1000 < 2) { showToast('Give it another moment—clips need to be at least two seconds.'); return; } recorder.stop(); }
 async function finishRecording() {
   clearInterval(timer); recordedBlob = new Blob(chunks,{type:recorder.mimeType || 'video/webm'}); stopCamera(); playback.src = URL.createObjectURL(recordedBlob); playback.hidden = false; camera.hidden = true; recordButton.hidden = true; recordingLight.hidden = true; recordActions.hidden = false; status.textContent = 'Take a look. Keep it only if it feels like yours.'; await playback.play().catch(() => {});
 }
@@ -109,7 +109,7 @@ recordAgainButton.addEventListener('click', async () => { resetRecorder(); try {
 function renderReflection(moment) {
   const dimensions = Object.entries(moment.dimensions || {}).map(([label,value]) => `<span>${escapeHtml(label)} ${Number(value).toFixed(0)}</span>`).join('');
   const notes = (moment.explanation || []).map(line => `<li>${escapeHtml(line)}</li>`).join('');
-  reflection.innerHTML = `<p class="kicker">Meaning grade · ${Number(moment.clipDurationSeconds || 0).toFixed(1)} seconds</p><div class="grade-line"><h1>${escapeHtml(moment.title)}</h1><strong>${Number(moment.score).toFixed(1)}</strong></div><p>${escapeHtml(moment.summary)}</p><div class="dimensions">${dimensions}</div><ul>${notes}</ul><div class="review-actions"><button class="button primary-action" id="saveMoment" type="button">Keep this moment</button><button class="button secondary-action" id="closeReflection" type="button">Back to clip</button></div>`;
+  reflection.innerHTML = `<p class="kicker">Purity grade · ${Number(moment.clipDurationSeconds || 0).toFixed(1)} seconds</p><div class="grade-line"><h1>${escapeHtml(moment.title)}</h1><strong>${Number.isFinite(moment.score) ? Number(moment.score).toFixed(1) : "Not ranked"}</strong></div><p>${escapeHtml(moment.summary)}</p><div class="dimensions">${dimensions}</div><ul>${notes}</ul><p>${authSession ? 'Sharing publishes this clip and its grade on the community board.' : 'This saves on your device. Sign in to share on the community board.'}</p><div class="review-actions"><button class="button primary-action" id="saveMoment" type="button" ${moment.eligibleForLeaderboard === true ? "" : "disabled"}>${moment.eligibleForLeaderboard === true ? (authSession ? "Keep and share on board" : "Keep on this device") : "Not eligible for the board"}</button><button class="button secondary-action" id="closeReflection" type="button">Back to clip</button></div>`;
   reflection.hidden = false;
   $('#closeReflection').addEventListener('click', () => { reflection.hidden = true; });
   $('#saveMoment').addEventListener('click', saveMoment);
@@ -132,23 +132,31 @@ async function loadLeaderboard() {
     const response = await fetch('/leaderboard');
     const payload = await response.json();
     const entries = Array.isArray(payload) ? payload : payload.entries || [];
-    leaderboard.innerHTML = entries.length ? entries.map((entry, index) => `<article class="saved-card leaderboard-card"><p class="score">#${index + 1} · ${escapeHtml(entry.username)}</p><div class="grade-line"><h2>${escapeHtml(entry.title)}</h2><strong>${Number(entry.score).toFixed(1)}</strong></div><p>${escapeHtml(entry.summary || 'A moment held in a few frames.')}</p></article>`).join('') : '<div class="empty-state"><span>✦</span><h2>The board is quiet.</h2><p>Be the first to add a graded moment.</p></div>';
+    leaderboard.innerHTML = entries.length ? entries.map((entry, index) => `<article class="saved-card leaderboard-card"><p class="score">#${index + 1} · ${escapeHtml(entry.username)}</p><div class="grade-line"><h2>${escapeHtml(entry.title)}</h2><strong>${Number(entry.score).toFixed(1)}</strong></div><p>${escapeHtml(entry.summary || 'A moment held in a few frames.')}</p>${entry.videoUrl ? `<video controls playsinline preload="none" src="${escapeHtml(entry.videoUrl)}" aria-label="${escapeHtml(entry.title)}"></video>` : ""}</article>`).join('') : '<div class="empty-state"><span>✦</span><h2>The board is quiet.</h2><p>Be the first to add a graded moment.</p></div>';
   } catch {
     leaderboard.innerHTML = '<div class="empty-state"><span>✦</span><h2>The board is resting.</h2><p>Your camera and private library still work.</p></div>';
   }
 }
 async function saveMoment() {
-  if (!result) return;
+  if (!result || result.eligibleForLeaderboard !== true || result.moderation?.status !== "approved") return;
   const saved = {id:`moment-${Date.now()}`,title:result.title,summary:result.summary,tier:result.tier,savedAt:new Date().toISOString()};
   library.unshift(saved); library = library.slice(0,100); localStorage.setItem('moments.library',JSON.stringify(library));
   storeDeviceMoment(saved).catch(() => showToast('Saved in your library. Your browser could not keep the video file.'));
   const saveButton = $('#saveMoment'); if (saveButton) { saveButton.textContent = 'Saved to your library'; saveButton.disabled = true; }
   showToast('Saved to your library on this device.');
   if (authSession?.access_token && recordedBlob) {
-    try { const form = new FormData(); form.append('file',recordedBlob,`moment-${Date.now()}.webm`); form.append('username',username.value || 'Anonymous'); await fetch('/moments',{method:'POST',headers:{Authorization:`Bearer ${authSession.access_token}`},body:form}); } catch { showToast('Saved here. Private backup will retry next time.'); }
+    try {
+      const form = new FormData();
+      form.append('file',recordedBlob,`moment-${Date.now()}.webm`);
+      form.append('username',username.value || 'Anonymous');
+      const response = await fetch('/moments',{method:'POST',headers:{Authorization:`Bearer ${authSession.access_token}`},body:form});
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'This clip could not be published.');
+      showToast('Your screened moment joined the meaning board.');
+    } catch (error) { showToast(`Saved on this device only. ${error.message}`); }
   }
 }
-function renderAuth(session) { authSession=session; const user=session?.user; authStatus.textContent=user ? `Signed in as ${user.email || user.user_metadata?.name || 'a member'}. New saved moments are backed up privately.` : 'Sign in to back up new saved moments privately.'; googleSignIn.hidden=Boolean(user); appleSignIn.hidden=Boolean(user); signOutButton.hidden=!user; }
+function renderAuth(session) { authSession=session; const user=session?.user; authStatus.textContent=user ? `Signed in as ${user.email || user.user_metadata?.name || 'a member'}. Screened moments can be shared on the meaning board.` : 'Sign in to share screened moments on the meaning board.'; googleSignIn.hidden=Boolean(user); appleSignIn.hidden=Boolean(user); signOutButton.hidden=!user; }
 async function initAuth() { try { const response=await fetch('/auth-config'); const config=await response.json(); if(!config.enabled || !window.supabase) throw new Error('Private backup is not set up yet.'); authClient=window.supabase.createClient(config.supabaseUrl,config.publishableKey); googleSignIn.disabled=!config.providers.includes('google'); appleSignIn.disabled=!config.providers.includes('apple'); const {data}=await authClient.auth.getSession(); renderAuth(data.session); authClient.auth.onAuthStateChange((_event,session) => renderAuth(session)); } catch(error) { authStatus.textContent='Private backup is not available yet. Your device library still works.'; googleSignIn.disabled=appleSignIn.disabled=true; } }
 async function beginOAuth(provider) { if(!authClient) return showToast('Private backup is not available yet.'); const {error}=await authClient.auth.signInWithOAuth({provider,options:{redirectTo:window.location.origin}}); if(error) showToast(error.message); }
 googleSignIn.addEventListener('click',() => beginOAuth('google')); appleSignIn.addEventListener('click',() => beginOAuth('apple')); signOutButton.addEventListener('click',async () => { const {error}=await authClient.auth.signOut(); if(error) showToast(error.message); });

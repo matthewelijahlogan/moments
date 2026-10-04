@@ -1,28 +1,32 @@
-import React from 'react';
+import React, {useState} from 'react';
+import Video from 'react-native-video';
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
+  Pressable,
   View,
 } from 'react-native';
 
 export function LeaderboardScreen({entries, isRefreshing}) {
+  const [playingId, setPlayingId] = useState(null);
   return (
     <ScrollView
       contentContainerStyle={styles.screenScroll}
       showsVerticalScrollIndicator={false}>
       <View style={styles.sectionHeaderRow}>
         <View style={styles.sectionHeaderCopy}>
-          <Text style={styles.sectionTitle}>Meaning board</Text>
+          <Text style={styles.sectionTitle}>Small moments, real meaning</Text>
           <Text style={styles.sectionBody}>
-            The highest-graded moments from the shared archive. Every score is
-            a read of the visible story captured in a few seconds.
+            Screened clips ranked for care, connection, wonder, and presence.
+            No likes, follower counts, or wealth bonuses.
           </Text>
         </View>
         {isRefreshing ? <ActivityIndicator color="#f2b75a" /> : null}
       </View>
 
+      {!entries.length ? <Text style={styles.sectionBody}>No screened moments on the board yet.</Text> : null}
       {entries.slice(0, 12).map((entry, index) => (
         <View
           key={entry.id || `${entry.username}-${entry.title}-${index}`}
@@ -40,6 +44,14 @@ export function LeaderboardScreen({entries, isRefreshing}) {
             <Text style={styles.boardSummary} numberOfLines={2}>
               {entry.summary}
             </Text>
+            {entry.videoUrl ? <>
+              {playingId === entry.id ? <Video source={{uri: entry.videoUrl}} controls
+                paused={false} resizeMode="contain" style={styles.boardVideo}
+                onEnd={() => setPlayingId(null)} /> : null}
+              <Pressable accessibilityRole="button" onPress={() => setPlayingId(playingId === entry.id ? null : entry.id)}>
+                <Text style={styles.boardUser}>{playingId === entry.id ? 'Close clip' : 'Watch moment'}</Text>
+              </Pressable>
+            </> : null}
           </View>
           <View style={styles.boardScoreWrap}>
             <Text style={styles.boardScore}>{Number(entry.score).toFixed(1)}</Text>
@@ -52,6 +64,7 @@ export function LeaderboardScreen({entries, isRefreshing}) {
 }
 
 const styles = StyleSheet.create({
+  boardVideo: {width: '100%', height: 150, marginVertical: 10},
   screenScroll: {
     paddingHorizontal: 18,
     paddingTop: 14,

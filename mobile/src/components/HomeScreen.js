@@ -20,13 +20,13 @@ export function HomeScreen({moments, onRecord, settings}) {
       </View>
       <View style={styles.tv}>
         <View style={styles.tvLip} />
-        <Pressable accessibilityHint="Opens the camera to record a three to five second clip" accessibilityLabel="Record a moment" onPress={onRecord} style={({pressed}) => [styles.tvScreen, pressed ? styles.tvScreenPressed : null]}>
+        <Pressable accessibilityHint="Opens the camera to record a two to four second clip" accessibilityLabel="Record a moment" onPress={onRecord} style={({pressed}) => [styles.tvScreen, pressed ? styles.tvScreenPressed : null]}>
           <View style={styles.screenGlow} />
           <View style={styles.recHeader}><Text style={styles.channelLabel}>CH 03</Text><Text style={styles.recLabel}>REC</Text></View>
           <View style={styles.recordCenter}>
             <View style={styles.recordRing}><View style={styles.recordDot} /></View>
             <Text style={styles.recordTitle}>PRESS TO RECORD</Text>
-            <Text style={styles.recordTiming}>3–5 SECOND HOME VIDEO</Text>
+            <Text style={styles.recordTiming}>2–4 SECOND HOME VIDEO</Text>
           </View>
           <Text style={styles.screenFooter}>KEEP WHAT YOU WILL WANT TO REMEMBER</Text>
         </Pressable>

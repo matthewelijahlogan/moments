@@ -18,7 +18,7 @@ export function ArchiveScreen({moments, onOpenMoment}) {
         <Image source={assets.hero} style={styles.emptyHero} />
         <Text style={styles.centeredTitle}>Your archive is empty</Text>
         <Text style={styles.centeredBody}>
-          Start from REC and keep a three-to-five-second piece of your day.
+          Start from REC and keep a two-to-four-second piece of your day.
         </Text>
       </View>
     );
