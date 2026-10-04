@@ -4,11 +4,14 @@ const path = require('path');
 const {rateLimit} = require('express-rate-limit');
 const multer = require('multer');
 const {createClient} = require('@supabase/supabase-js');
-const {analyzeVideo, featuredLeaderboard} = require('./src/analyzer');
+const {analyzeVideo} = require('./src/analyzer');
+const {POLICY_VERSION} = require('./src/moderation');
+const {ENGINE_VERSION} = require('./src/meaning');
 const {
   archiveMoment,
   isPersistenceConfigured,
   listLeaderboard,
+  getPublishedVideoUrl,
 } = require('./src/persistence');
 
 const app = express();
@@ -136,7 +139,10 @@ app.get('/health', (request, response) => {
     service: 'moments-backend',
     persistence: isPersistenceConfigured() ? 'supabase' : 'local-only',
     scoring: 'local-open-source',
-    capture: 'video-only-3-to-5-seconds',
+    capture: 'video-only-2-to-4-seconds',
+    scoringVersion: ENGINE_VERSION,
+    moderationPolicyVersion: POLICY_VERSION,
+    moderationConfigured: Boolean(process.env.MODERATION_SERVICE_URL && process.env.MODERATION_SERVICE_TOKEN),
     timestamp: new Date().toISOString(),
   });
 });
@@ -174,12 +180,20 @@ app.get('/leaderboard', async (request, response, next) => {
   try {
     const persistedEntries = await listLeaderboard(request.query.limit);
     response.json({
-      entries:
-        persistedEntries && persistedEntries.length
-          ? persistedEntries
-          : featuredLeaderboard,
-      source: persistedEntries ? 'supabase' : 'featured',
+      entries: persistedEntries || [],
+      source: persistedEntries ? 'supabase' : 'unconfigured',
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/moments/:id/video', async (request, response, next) => {
+  try {
+    response.set('Cache-Control', 'no-store');
+    const url = await getPublishedVideoUrl(request.params.id);
+    if (!url) return response.status(404).json({error: 'This moment is not available.'});
+    response.redirect(302, url);
   } catch (error) {
     next(error);
   }
@@ -187,7 +201,7 @@ app.get('/leaderboard', async (request, response, next) => {
 
 app.post('/score-image', (request, response) => {
   response.status(410).json({
-    error: 'Moments now scores 3–5 second video clips instead of photos.',
+    error: 'Moments now scores 2–4 second video clips instead of photos.',
   });
 });
 
@@ -223,7 +237,7 @@ app.post(
 
     if (!request.file.mimetype.startsWith('video/')) {
       response.status(415).json({
-        error: 'The archive accepts 3–5 second video clips only.',
+        error: 'The archive accepts 2–4 second video clips only.',
       });
       return;
     }
@@ -249,12 +263,12 @@ app.post(
 app.use((error, request, response, next) => {
   if (error && error.code === 'LIMIT_FILE_SIZE') {
     response.status(413).json({
-      error: 'That recording is too large. Keep it between three and five seconds.',
+      error: 'That recording is too large. Keep it between two and four seconds.',
     });
     return;
   }
 
-  console.error(error);
+  console.error('Moments request failed:', error.statusCode || error.code || 'internal_error');
   response.status(error.statusCode || 500).json({
     error:
       error.statusCode && error.message
@@ -263,7 +277,8 @@ app.use((error, request, response, next) => {
   });
 });
 
-const port = Number(process.env.PORT || 3000);
-app.listen(port, () => {
-  console.log(`Moments backend listening on ${port}`);
-});
+if (require.main === module) {
+  const port = Number(process.env.PORT || 3000);
+  app.listen(port, () => console.log(`Moments backend listening on ${port}`));
+}
+module.exports = app;

@@ -12,3 +12,8 @@ mobile/ios/build/
 Thumbs.db
 *.keystore
 *.jks
+
+.env
+.env.*
+!.env.example
+.model-cache/

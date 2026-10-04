@@ -1,4 +1,4 @@
-const CACHE = 'moments-shell-v3';
+const CACHE = 'moments-shell-v4';
 const SHELL = [
   '/',
   '/index.html',
@@ -33,6 +33,7 @@ self.addEventListener('fetch', event => {
   if (
     url.origin !== self.location.origin ||
     url.pathname.startsWith('/leaderboard') ||
+    url.pathname.startsWith('/moments/') ||
     url.pathname.startsWith('/health') ||
     url.pathname.startsWith('/.moments-vision')
   ) {

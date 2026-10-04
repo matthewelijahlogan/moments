@@ -1,32 +1,4 @@
-export const defaultCommunityLeaderboard = [
-  {
-    id: 'featured-quiet-morning',
-    username: 'QuietSignal',
-    title: 'Christmas kitchen at 7:12',
-    score: 94.2,
-    summary:
-      'A short, unforced family exchange held warmth across the tape instead of playing to the camera.',
-    source: 'Featured',
-  },
-  {
-    id: 'featured-parking-lot',
-    username: 'TapeArchive',
-    title: 'Creek water in July',
-    score: 91.7,
-    summary:
-      'Shared motion, laughter, and place made the clip feel lived rather than arranged.',
-    source: 'Featured',
-  },
-  {
-    id: 'featured-porch',
-    username: 'HumanVoltage',
-    title: 'Last light from the porch',
-    score: 88.6,
-    summary:
-      'Quiet atmosphere carried the tape without needing spectacle or expensive things.',
-    source: 'Featured',
-  },
-];
+export const defaultCommunityLeaderboard = [];
 
 export function normalizeApiBaseUrl(value) {
   return (value || '').trim().replace(/\/+$/, '');
@@ -47,7 +19,7 @@ export async function scoreMoment({asset, apiBaseUrl, username}) {
   }
 
   if (!isVideoAsset(asset)) {
-    throw new Error('Moments accepts 3–5 second video clips only.');
+    throw new Error('Moments accepts 2–4 second video clips only.');
   }
 
   const endpoint = 'score-video';
@@ -78,7 +50,7 @@ export async function scoreMoment({asset, apiBaseUrl, username}) {
     );
   }
 
-  if (!payload || typeof payload.score !== 'number') {
+  if (!payload || !(Number.isFinite(payload.score) || (payload.score === null && payload.moderation?.status))) {
     throw new Error('The scoring service returned an invalid response.');
   }
 
@@ -97,9 +69,12 @@ export async function archiveMoment({
     throw new Error('Set a backend URL before archiving a moment.');
   }
 
+  if (moment.eligibleForLeaderboard !== true || moment.moderation?.status !== 'approved') {
+    throw new Error('This clip has not cleared safety screening and ranking.');
+  }
   const isVideo = moment.mediaType === 'video';
   if (!isVideo) {
-    throw new Error('Only 3–5 second clips can be archived.');
+    throw new Error('Only 2–4 second clips can be archived.');
   }
   const formData = new FormData();
   formData.append('file', {
@@ -134,7 +109,8 @@ export async function archiveMoment({
     throw new Error('The cloud archive returned an invalid response.');
   }
 
-  return payload;
+  return {...payload, archive: {...payload.archive,
+    videoUrl: payload.archive.videoUrl ? `${normalizedBaseUrl}${payload.archive.videoUrl}` : null}};
 }
 
 export async function fetchLeaderboard(apiBaseUrl) {
@@ -159,7 +135,7 @@ export async function fetchLeaderboard(apiBaseUrl) {
   }
 
   if (Array.isArray(payload.entries)) {
-    return payload.entries;
+    return payload.entries.map(entry => ({...entry, videoUrl: entry.videoUrl ? `${normalizedBaseUrl}${entry.videoUrl}` : null}));
   }
 
   return defaultCommunityLeaderboard;

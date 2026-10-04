@@ -30,10 +30,10 @@ export function ResultScreen({
     <ScrollView
       contentContainerStyle={styles.screenScroll}
       showsVerticalScrollIndicator={false}>
-      <Text style={styles.sectionTitle}>Your moment grade</Text>
+      <Text style={styles.sectionTitle}>{moment.score === null ? 'Not ranked' : 'Your purity grade'}</Text>
       <Text style={styles.sectionBody}>
-        The grade reads visible details—movement, composition, connection, and
-        continuity—to estimate how much meaning the clip holds in a few frames.
+        Small acts of care, connection, wonder, and presence. The grade ranks
+        visible moments; it cannot judge a person or prove what they feel.
       </Text>
 
       {isVideo ? (
@@ -59,7 +59,7 @@ export function ResultScreen({
         </Text>
         <View style={styles.resultHeader}>
           <Text style={styles.resultTitle}>{moment.title}</Text>
-          <Text style={styles.resultScore}>{Number(moment.score).toFixed(1)}</Text>
+          <Text style={styles.resultScore}>{Number.isFinite(moment.score) ? Number(moment.score).toFixed(1) : '—'}</Text>
         </View>
         <Text style={styles.resultSummary}>{moment.summary}</Text>
 
@@ -80,14 +80,16 @@ export function ResultScreen({
       <View style={styles.resultActions}>
         <PrimaryButton
           label={
-            activeMomentSaved
+            !moment.eligibleForLeaderboard
+              ? 'Not eligible for the board'
+              : activeMomentSaved
               ? 'Saved to Archive'
               : isArchiving
-                ? 'Archiving...'
-                : 'Keep this moment'
+                ? 'Sharing...'
+                : 'Share on meaning board'
           }
           onPress={onArchive}
-          disabled={activeMomentSaved || isArchiving}
+          disabled={activeMomentSaved || isArchiving || !moment.eligibleForLeaderboard}
         />
         <SecondaryButton label="Capture Another" onPress={onAnalyzeAnother} />
       </View>
